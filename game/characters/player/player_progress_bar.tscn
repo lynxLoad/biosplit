@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://4t0y2sh8g745"]
+
+[ext_resource type="Texture2D" uid="uid://bbrfr60h2gg8" path="res://assets/sprites/Hero_stamina_bar_01.png" id="1_kbft1"]
+[ext_resource type="Texture2D" uid="uid://h5fisltco1lr" path="res://assets/sprites/Hero_stamina_bar_02.png" id="2_un2s1"]
+[ext_resource type="Script" uid="uid://cfnx41l7gfvxo" path="res://game/characters/health_bar.gd" id="3_un2s1"]
+
+[node name="TextureProgressBar" type="TextureProgressBar" unique_id=1458703602]
+offset_right = 40.0
+offset_bottom = 40.0
+value = 100.0
+texture_under = ExtResource("1_kbft1")
+texture_progress = ExtResource("2_un2s1")
+texture_progress_offset = Vector2(0, -1)
+script = ExtResource("3_un2s1")

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="Weapon" format=3 uid="uid://ckaiyl160nbn"]
+
+[ext_resource type="Script" uid="uid://cv1jon4lg46oi" path="res://assets/resources/weapons/weapon.gd" id="1_47hxc"]
+
+[resource]
+script = ExtResource("1_47hxc")
+name = &"Hands"

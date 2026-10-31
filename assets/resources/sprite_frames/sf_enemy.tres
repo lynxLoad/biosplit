@@ -1,0 +1,69 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://c77vxafmic42y"]
+
+[ext_resource type="Texture2D" uid="uid://cmmmvon54l081" path="res://assets/sprites/Zombi_atak_01.png" id="1_r5xco"]
+[ext_resource type="Texture2D" uid="uid://pe7j1bihe85m" path="res://assets/sprites/Zombi_atak_02.png" id="2_akesu"]
+[ext_resource type="Texture2D" uid="uid://cembxateoopl0" path="res://assets/sprites/Zombi_block_01.png" id="3_hj7ip"]
+[ext_resource type="Texture2D" uid="uid://b2puncq67htpw" path="res://assets/sprites/Zombi_idle_01.png" id="4_g8pqk"]
+[ext_resource type="Texture2D" uid="uid://ctpd1kavwxhx2" path="res://assets/sprites/Zombi_damag_01.png" id="5_7072x"]
+[ext_resource type="Texture2D" uid="uid://6obpmotb1qh0" path="res://assets/sprites/Zombi_death_01.png" id="6_lph8g"]
+[ext_resource type="Texture2D" uid="uid://bfg6j4t4ufyxv" path="res://assets/sprites/Zombi_death_02.png" id="7_yvhlv"]
+[ext_resource type="Texture2D" uid="uid://tpet78jampoc" path="res://assets/sprites/Zombi_death_03.png" id="8_v7cy6"]
+[ext_resource type="Texture2D" uid="uid://crb4anrkqc0pv" path="res://assets/sprites/Zombi_idle_02.png" id="9_mw7m8"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_r5xco")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_akesu")
+}],
+"loop": 0,
+"name": &"attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_hj7ip")
+}],
+"loop": 0,
+"name": &"block",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_g8pqk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_7072x")
+}],
+"loop": 0,
+"name": &"damage",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_lph8g")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_yvhlv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_v7cy6")
+}],
+"loop": 0,
+"name": &"death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_g8pqk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_mw7m8")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}]

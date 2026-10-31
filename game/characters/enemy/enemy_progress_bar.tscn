@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://cb0bn0xqby02y"]
+
+[ext_resource type="Texture2D" uid="uid://cnxwyu88l3w48" path="res://assets/sprites/Enemy_bar_01.png" id="1_4rlwm"]
+[ext_resource type="Texture2D" uid="uid://b4ac48u20yjx2" path="res://assets/sprites/Enemy_bar_02.png" id="2_ebb75"]
+[ext_resource type="Script" uid="uid://cfnx41l7gfvxo" path="res://game/characters/health_bar.gd" id="3_ebb75"]
+
+[node name="TextureProgressBar" type="TextureProgressBar" unique_id=210445443]
+offset_top = -1.0
+offset_right = 125.0
+offset_bottom = 14.0
+value = 100.0
+texture_under = ExtResource("1_4rlwm")
+texture_progress = ExtResource("2_ebb75")
+texture_progress_offset = Vector2(22, 3)
+script = ExtResource("3_ebb75")
+
+[node name="Level" type="Label" parent="." unique_id=1628637294]
+layout_mode = 0
+offset_left = 3.0
+offset_top = -2.0
+offset_right = 18.0
+offset_bottom = 16.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "00"
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="." unique_id=211332566]
+layout_mode = 0
+offset_left = -5.0
+offset_top = -18.0
+offset_right = 132.29955
+offset_bottom = 5.0
+theme_override_colors/font_color = Color(0.82, 0.82, 0.82, 1)
+theme_override_font_sizes/font_size = 12
+text = "Temp Temp Temp"
+horizontal_alignment = 1

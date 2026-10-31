@@ -1,0 +1,94 @@
+[gd_scene format=3 uid="uid://cafo11jblajgm"]
+
+[ext_resource type="Script" uid="uid://wwluxuhkw7q2" path="res://main_3.gd" id="1_efxa6"]
+[ext_resource type="Texture2D" uid="uid://o440pjtmtjxt" path="res://atak_screen_textures/Back_01.jpg" id="2_lquwl"]
+[ext_resource type="Texture2D" uid="uid://c1ikdblwvnt6j" path="res://atak_screen_textures/Back_03.png" id="3_7mycd"]
+[ext_resource type="Texture2D" uid="uid://bqow00exlgrh8" path="res://atak_screen_textures/Back_04.png" id="4_272bh"]
+[ext_resource type="Texture2D" uid="uid://cetn7xkt6b7bw" path="res://atak_screen_textures/Back_02.png" id="5_5vw27"]
+[ext_resource type="PackedScene" uid="uid://jepf84siqncy" path="res://Hero.tscn" id="6_7mycd"]
+[ext_resource type="Texture2D" uid="uid://bbrfr60h2gg8" path="res://atak_screen_textures/Hero_stamina_bar_01.png" id="6_kek77"]
+[ext_resource type="Texture2D" uid="uid://h5fisltco1lr" path="res://atak_screen_textures/Hero_stamina_bar_02.png" id="7_4c57u"]
+
+[node name="Main" type="Node" unique_id=560249350]
+script = ExtResource("1_efxa6")
+
+[node name="Background" type="Node2D" parent="." unique_id=448904867]
+
+[node name="Parallax2D" type="Parallax2D" parent="Background" unique_id=1868892403]
+scroll_scale = Vector2(0.3, 0.3)
+
+[node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D" unique_id=1797977614]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(36, 0)
+texture = ExtResource("2_lquwl")
+offset = Vector2(480, 270)
+region_enabled = true
+region_rect = Rect2(0, 0, 100000, 540)
+
+[node name="Parallax2D3" type="Parallax2D" parent="Background" unique_id=1467806719]
+
+[node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D3" unique_id=1072722718]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(571, 0)
+texture = ExtResource("3_7mycd")
+offset = Vector2(480, 270)
+region_enabled = true
+region_rect = Rect2(0, 0, 100000, 540)
+
+[node name="Parallax2D4" type="Parallax2D" parent="Background" unique_id=1603084307]
+scroll_scale = Vector2(1.5, 1.5)
+
+[node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D4" unique_id=1436648481]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(205, -224)
+texture = ExtResource("4_272bh")
+offset = Vector2(480, 270)
+region_enabled = true
+region_rect = Rect2(-7.84, 1.016, 100000, 94.701)
+
+[node name="Parallax2D2" type="Parallax2D" parent="Background" unique_id=745105323]
+scroll_scale = Vector2(3, 3)
+
+[node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D2" unique_id=1251757392]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(320, 0)
+texture = ExtResource("5_5vw27")
+offset = Vector2(480, 448)
+region_enabled = true
+region_rect = Rect2(0, 0, 100000, 184)
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1665523711]
+position = Vector2(480, 270)
+
+[node name="Hero" parent="." unique_id=918585539 instance=ExtResource("6_7mycd")]
+z_index = 1
+position = Vector2(330, 340)
+
+[node name="Node2D" type="Node2D" parent="Hero" unique_id=897326245]
+position = Vector2(-359, -342)
+
+[node name="stamina_bar_back" type="Sprite2D" parent="Hero/Node2D" unique_id=1749428873]
+position = Vector2(360, 370)
+texture = ExtResource("6_kek77")
+
+[node name="stamina_bar" type="Sprite2D" parent="Hero/Node2D" unique_id=969732599]
+position = Vector2(335, 366)
+texture = ExtResource("7_4c57u")
+centered = false
+
+[node name="timer_udar_culdaun" type="Timer" parent="." unique_id=1954596463]
+wait_time = 0.2
+one_shot = true
+
+[node name="txt_test" type="Label" parent="." unique_id=1336382176]
+offset_left = 25.0
+offset_top = 13.0
+offset_right = 99.0
+offset_bottom = 54.0
+text = "99999"
+
+[connection signal="timeout" from="timer_udar_culdaun" to="." method="_on_timer_udar_culdaun_timeout"]

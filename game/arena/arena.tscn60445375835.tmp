@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://m1v7fgeqvrli"]
+
+[ext_resource type="Texture2D" uid="uid://o440pjtmtjxt" path="res://assets/sprites/Back_01.jpg" id="1_sljpa"]
+[ext_resource type="Texture2D" uid="uid://c1ikdblwvnt6j" path="res://assets/sprites/Back_03.png" id="2_8eybb"]
+[ext_resource type="Texture2D" uid="uid://bqow00exlgrh8" path="res://assets/sprites/Back_04.png" id="3_elpcd"]
+[ext_resource type="Texture2D" uid="uid://cetn7xkt6b7bw" path="res://assets/sprites/Back_02.png" id="4_ld8sx"]
+[ext_resource type="PackedScene" uid="uid://b518ysonl8xuh" path="res://game/arena/battle_manager.tscn" id="5_8eybb"]
+[ext_resource type="PackedScene" uid="uid://cimp7lob5mx6a" path="res://game/characters/player/player.tscn" id="6_ld8sx"]
+[ext_resource type="PackedScene" uid="uid://djqbckuyej0ip" path="res://game/characters/enemy/enemy.tscn" id="7_ltahe"]
+
+[node name="Arena" type="Node2D" unique_id=1800405082]
+
+[node name="Background" type="Node2D" parent="." unique_id=1873647051]
+
+[node name="Parallax2D" type="Parallax2D" parent="Background" unique_id=1655981381]
+scroll_scale = Vector2(0.3, 0.3)
+
+[node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D" unique_id=1991461997]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(36, 0)
+texture = ExtResource("1_sljpa")
+offset = Vector2(480, 270)
+region_enabled = true
+region_rect = Rect2(0, 0, 100000, 540)
+
+[node name="Parallax2D3" type="Parallax2D" parent="Background" unique_id=2023442318]
+
+[node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D3" unique_id=466596091]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(571, 0)
+texture = ExtResource("2_8eybb")
+offset = Vector2(480, 270)
+region_enabled = true
+region_rect = Rect2(0, 0, 100000, 540)
+
+[node name="Parallax2D4" type="Parallax2D" parent="Background" unique_id=200673144]
+scroll_scale = Vector2(1.5, 1.5)
+
+[node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D4" unique_id=1532152891]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(205, -224)
+texture = ExtResource("3_elpcd")
+offset = Vector2(480, 270)
+region_enabled = true
+region_rect = Rect2(-7.84, 1.016, 100000, 94.701)
+
+[node name="Parallax2D2" type="Parallax2D" parent="Background" unique_id=1435114188]
+scroll_scale = Vector2(3, 3)
+
+[node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D2" unique_id=474648524]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(320, 0)
+texture = ExtResource("4_ld8sx")
+offset = Vector2(480, 448)
+region_enabled = true
+region_rect = Rect2(0, 0, 100000, 184)
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=746185389]
+position = Vector2(480, 270)
+
+[node name="BattleManager" parent="." unique_id=429190078 instance=ExtResource("5_8eybb")]
+player_scene = ExtResource("6_ld8sx")
+enemy_scene = ExtResource("7_ltahe")
+player_spawn = Vector2(330, 340)
+enemy_spawns = Array[Vector2]([Vector2(570, 340), Vector2(720, 305), Vector2(820, 355)])
+reflow_duration = 0.2
+death_fade_duration = 0.5
