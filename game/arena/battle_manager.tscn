@@ -28,6 +28,15 @@ script/source = "extends Node
 ## Всего врагов за волну. Первые enemy_spawns.size() — на поле, остальные в очереди.
 @export var total_enemies: int = 6
 
+## Приоритеты отрисовки врагов.
+## Лидер (первый в массиве) всегда выше остальных,
+## а умирающий лидер — ещё выше, чтобы death-анимация не уходила за спины.
+## Атакующий поднимается над всеми через CharacterBase.z_attack_priority
+## (см. _apply_z_order — он пропускает атакующего).
+@export var z_first_enemy: int = 10
+@export var z_other_enemy: int = 0
+@export var z_dying_first: int = 100
+
 @onready var arena: Node2D = get_parent()
 
 var player: Player
@@ -57,12 +66,19 @@ func _spawn_all() -> void:
 	# Массив — ссылка, player.enemies и enemies всегда синхронны
 	player.enemies = enemies
 
+	# Лидер (индекс 0) — поверх остальных врагов.
+	_apply_z_order()
+
 func _spawn_enemy_at(pos: Vector2, fade_in: bool) -> CharacterBase:
 	var e := enemy_scene.instantiate() as CharacterBase
 	arena.add_child(e)
 	e.global_position = pos
 	e.reset_idle_point()
 	e.died.connect(_on_enemy_died.bind(e))
+	# После окончания атаки (или движения) врага — пересчитываем z.
+	# Это нужно, потому что во время атаки зомби был поднят над всеми,
+	# а за время атаки лидерство могло смениться.
+	e.turn_finished.connect(_apply_z_order)
 	_spawned_count += 1
 	if fade_in:
 		_start_fade_in(e)
@@ -83,10 +99,29 @@ func _queue_spawn_point() -> Vector2:
 func _has_queued_enemy() -> bool:
 	return _spawned_count < total_enemies
 
+## Расставляет z_index по массиву: лидер (индекс 0) — выше всех,
+## остальные — на базовом уровне.
+## Атакующий пропускается: у него z уже поднят до z_attack_priority,
+## и мы не должны его перебивать во время reflow.
+func _apply_z_order() -> void:
+	for i in enemies.size():
+		var e := enemies[i]
+		if not is_instance_valid(e):
+			continue
+		if e.is_attacking():
+			continue
+		e.set_z_priority(z_first_enemy if i == 0 else z_other_enemy)
+
 func _on_enemy_died(enemy: CharacterBase) -> void:
 	var idx := enemies.find(enemy)
 	if idx == -1:
 		return
+
+	# Если умирает лидер — поднимаем его над всеми, чтобы анимация смерти
+	# (knockback/fade) не ушла за спины выживших и нового лидера.
+	if idx == 0:
+		enemy.set_z_priority(z_dying_first)
+
 	enemies.remove_at(idx)
 
 	# Есть враг в очереди — спавним за экраном (Y выровнен по последнему слоту)
@@ -116,6 +151,9 @@ func _reflow_enemies() -> void:
 			continue
 		e.idle_point = enemy_spawns[i]
 		e.move_to_idle_point(reflow_duration)
+
+	# После сдвига лидер мог смениться — пересчитываем z-приоритеты.
+	_apply_z_order()
 "
 
 [node name="BattleManager" type="Node" unique_id=429190078]

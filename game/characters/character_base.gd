@@ -41,6 +41,10 @@ signal retreat_started
 @export var death_fade_duration: float = 0.5
 @export var death_fade_delay: float = 0.0
 
+## Приоритет отрисовки во время собственной атаки.
+## Атакующий всегда выше всех остальных (и живых, и умирающих).
+@export var z_attack_priority: int = 1000
+
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var health_bar: HealthBar = $HealthBar
 
@@ -50,6 +54,9 @@ var health: float
 
 var _is_dead: bool = false
 var _is_busy: bool = false
+var _is_attacking: bool = false
+var _z_before_attack: int = 0
+
 var _active_tween: Tween
 var _hit_shake_tween: Tween
 var _flash_tween: Tween
@@ -84,6 +91,20 @@ func is_dead() -> bool:
 	return _is_dead
 
 
+## Атакующий ли персонаж прямо сейчас (подлёт + анимация атаки).
+## Спавнер использует этот флаг, чтобы не перебивать z атакующего
+## во время reflow.
+func is_attacking() -> bool:
+	return _is_attacking
+
+
+## Задаёт приоритет отрисовки всего узла (спрайт + health bar).
+## z_index перебивает y-sort, поэтому лидер останется сверху
+## даже во время knockback/fade при смерти.
+func set_z_priority(priority: int) -> void:
+	z_index = priority
+
+
 # ── public ──
 
 func attack(enemy: CharacterBase) -> void:
@@ -91,6 +112,11 @@ func attack(enemy: CharacterBase) -> void:
 		return
 	_is_busy = true
 	target = enemy
+
+	# Поднимаемся над всеми на время своей атаки.
+	_is_attacking = true
+	_z_before_attack = z_index
+	z_index = z_attack_priority
 
 	var start := global_position
 	var dir := start - enemy.global_position
@@ -137,6 +163,12 @@ func attack(enemy: CharacterBase) -> void:
 	await _wait_tween(_active_tween)
 	if _is_dead:
 		return
+
+	# Возвращаем нормальный z. Если за время атаки лидерство сменилось,
+	# спавнер сразу после turn_finished пересчитает z через reflow
+	# (см. подписку turn_finished -> _apply_z_order в спавнере).
+	_is_attacking = false
+	z_index = _z_before_attack
 
 	_is_busy = false
 	_play_anim(ANIM_IDLE)
