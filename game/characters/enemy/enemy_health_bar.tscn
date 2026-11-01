@@ -1,18 +1,18 @@
 [gd_scene format=3 uid="uid://cb0bn0xqby02y"]
 
-[ext_resource type="Texture2D" uid="uid://cnxwyu88l3w48" path="res://assets/sprites/Enemy_bar_01.png" id="1_4rlwm"]
-[ext_resource type="Texture2D" uid="uid://b4ac48u20yjx2" path="res://assets/sprites/Enemy_bar_02.png" id="2_ebb75"]
-[ext_resource type="Script" uid="uid://cfnx41l7gfvxo" path="res://game/characters/health_bar.gd" id="3_ebb75"]
+[ext_resource type="Texture2D" uid="uid://cnxwyu88l3w48" path="res://assets/sprites/Enemy_bar_01.png" id="1_qjbse"]
+[ext_resource type="Texture2D" uid="uid://b4ac48u20yjx2" path="res://assets/sprites/Enemy_bar_02.png" id="2_aaiid"]
+[ext_resource type="Script" uid="uid://cfnx41l7gfvxo" path="res://game/characters/bar.gd" id="3_lxggn"]
 
 [node name="TextureProgressBar" type="TextureProgressBar" unique_id=210445443]
 offset_top = -1.0
 offset_right = 125.0
 offset_bottom = 14.0
 value = 100.0
-texture_under = ExtResource("1_4rlwm")
-texture_progress = ExtResource("2_ebb75")
+texture_under = ExtResource("1_qjbse")
+texture_progress = ExtResource("2_aaiid")
 texture_progress_offset = Vector2(22, 3)
-script = ExtResource("3_ebb75")
+script = ExtResource("3_lxggn")
 
 [node name="Level" type="Label" parent="." unique_id=1628637294]
 layout_mode = 0

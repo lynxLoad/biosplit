@@ -1,5 +1,5 @@
 extends TextureProgressBar
-class_name HealthBar
+class_name Bar
 
 ## Больше = резче (короче анимация). ~25 → ~0.12 с, ~5 → ~0.6 с.
 @export_range(1.0, 40.0, 0.5) var smooth_speed: float = 25.0
@@ -19,7 +19,7 @@ func setup(current: float, maximum: float) -> void:
 	value = _target
 
 ## Вызывать при изменении HP — бар сам плавно доедет.
-func update_health(current: float, maximum: float) -> void:
+func update_value(current: float, maximum: float) -> void:
 	_target = _ratio(current, maximum)
 
 	_kill_tween()

@@ -46,7 +46,6 @@ signal retreat_started
 @export var z_attack_priority: int = 1000
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
-@onready var health_bar: HealthBar = $HealthBar
 
 var target: CharacterBase
 var idle_point: Vector2
@@ -73,7 +72,6 @@ func _ready() -> void:
 	character_stats = character_stats.duplicate()
 	health = character_stats.max_health
 	reset_idle_point()
-	_init_bar()
 	_play_anim(ANIM_IDLE)
 	if animated_sprite:
 		_sprite_base_position = animated_sprite.position
@@ -220,14 +218,12 @@ func heal(amount: float) -> void:
 	if _is_dead or amount <= 0.0:
 		return
 	health = minf(character_stats.max_health, health + amount)
-	_sync_bar()
 
 
 # ── internal: урон ──
 
 func _apply_damage(amount: float) -> void:
 	health = maxf(0.0, health - amount)
-	_sync_bar()
 	damaged.emit(amount)
 	if health <= 0.0:
 		_die()
@@ -407,11 +403,11 @@ func _wait_tween(tw: Tween) -> void:
 
 # ── internal: UI ──
 
-func _init_bar() -> void:
-	if health_bar:
-		health_bar.setup(health, character_stats.max_health)
+func _init_bar(bar: Bar, value: float, max_value: float) -> void:
+	if bar:
+		bar.setup(value, max_value)
 
 
-func _sync_bar() -> void:
-	if health_bar:
-		health_bar.update_health(health, character_stats.max_health)
+func _sync_bar(bar: Bar, value: float, max_value: float) -> void:
+	if bar:
+		bar.update_value(value, max_value)
