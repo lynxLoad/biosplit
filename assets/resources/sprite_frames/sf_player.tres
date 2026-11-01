@@ -29,21 +29,7 @@ animations = [{
 "texture": ExtResource("3_eb48s")
 }],
 "loop": 0,
-"name": &"attack",
-"speed": 10.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("4_ycv0k")
-}, {
-"duration": 1.0,
-"texture": ExtResource("5_i7ngm")
-}, {
-"duration": 1.0,
-"texture": ExtResource("5_i7ngm")
-}],
-"loop": 0,
-"name": &"attack_2",
+"name": &"attack_1",
 "speed": 10.0
 }, {
 "frames": [{
@@ -63,7 +49,21 @@ animations = [{
 "texture": ExtResource("8_veph6")
 }],
 "loop": 0,
-"name": &"attack_3",
+"name": &"attack_2",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_ycv0k")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_i7ngm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_i7ngm")
+}],
+"loop": 0,
+"name": &"attack_none",
 "speed": 10.0
 }, {
 "frames": [{

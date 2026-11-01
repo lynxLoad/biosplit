@@ -14,7 +14,7 @@ weapon = ExtResource("3_65114")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=356963692]
 z_index = 1
 sprite_frames = ExtResource("1_yjtv7")
-animation = &"attack"
+animation = &"attack_2"
 offset = Vector2(0, -69)
 
 [node name="HealthBar" parent="." unique_id=1458703602 instance=ExtResource("5_65114")]

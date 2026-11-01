@@ -43,6 +43,7 @@ var player: Player
 var enemies: Array[CharacterBase] = []
 var _reflow_pending: bool = false
 var _spawned_count: int = 0  # сколько уже заспавнено всего (на поле + выбывшие)
+var _reflow_serial: int = 0
 
 func _ready() -> void:
 	# Родитель ещё занят настройкой детей — откладываем спавн на idle-тик.
@@ -145,6 +146,12 @@ func _on_attacker_retreat_started() -> void:
 		_reflow_enemies()
 
 func _reflow_enemies() -> void:
+	_reflow_serial += 1
+	var serial := _reflow_serial
+
+	if is_instance_valid(player):
+		player.set_attack_locked(true)
+
 	for i in enemies.size():
 		var e := enemies[i]
 		if not is_instance_valid(e):
@@ -152,8 +159,18 @@ func _reflow_enemies() -> void:
 		e.idle_point = enemy_spawns[i]
 		e.move_to_idle_point(reflow_duration)
 
-	# После сдвига лидер мог смениться — пересчитываем z-приоритеты.
 	_apply_z_order()
+
+	# Ждём реального окончания движения (у врагов tween длится reflow_duration).
+	await get_tree().create_timer(reflow_duration).timeout
+
+	# Если за это время стартовал новый reflow — не разблокируем игрока раньше времени,
+	# этим займётся уже новый вызов.
+	if serial != _reflow_serial:
+		return
+
+	if is_instance_valid(player):
+		player.set_attack_locked(false)
 "
 
 [node name="BattleManager" type="Node" unique_id=429190078]
