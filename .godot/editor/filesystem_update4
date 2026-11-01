@@ -1,5 +1,0 @@
-res://game/characters/player/player.tscn
-res://assets/resources/sprite_frames/sf_player.tres
-res://game/characters/player/player.gd
-res://game/arena/arena.tscn
-res://game/arena/battle_manager.tscn
