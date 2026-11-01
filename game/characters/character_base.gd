@@ -6,6 +6,13 @@ signal damaged(amount: float)
 signal died
 signal retreat_started
 
+## ── блокирование ──
+signal block_started
+signal block_ended
+signal hit_blocked(amount: float)
+
+@export_range(0.0, 1.0) var block_anim_lead_ratio: float = 1
+
 @export var character_stats: CharacterStats
 @export var weapon: Weapon
 
@@ -14,35 +21,34 @@ signal retreat_started
 @export var min_phase_duration: float = 0.08
 @export var max_phase_duration: float = 1.5
 
-## Кадр анимации "damage", на котором реально уменьшается HP и обновляется бар.
-@export var animation_frame_damage: int = 3
+@export var animation_frame_damage: int = 1
 
-## ── реакция на удар (без сквоша) ──
-## Короткое смещение спрайта «от удара» и обратно.
-## Узел (global_position) не трогаем — только animated_sprite.position.
 @export var hit_shake_distance: float = 14.0
-@export var hit_shake_duration: float = 0.12      # в одну сторону
-@export var hit_shake_return_mult: float = 1.5    # возврат чуть медленнее
+@export var hit_shake_duration: float = 0.12
+@export var hit_shake_return_mult: float = 1.5
 
-## ── флэш при уроне ──
 @export var flash_color: Color = Color(1, 0.4, 0.4, 1)
 @export var flash_in_duration: float = 0.05
 @export var flash_out_duration: float = 0.1
 
-## ── смерть: отлёт ──
+## ── блокирование ──
+## Блок удерживается, пока не вызван unblock(). Таймаута нет, turn_finished
+## не эмитится — блок не тратит ход, а «замораживает» персонажа в стойке.
+@export var block_flash_color: Color = Color(0.4, 0.65, 1.0, 1)
+@export var block_flash_in_duration: float = 0.03
+@export var block_flash_out_duration: float = 0.12
+@export var block_shake_distance: float = 6.0
+## Сколько урона блок выдержит до принудительного снятия. 0 = бесконечно.
+@export var block_max_absorbed_damage: float = 0.0
+
 @export var death_knockback_distance: float = 100.0
 @export var death_knockback_duration: float = 0.45
 @export var death_knockback_arc: float = 0.0
 @export var death_knockback_rotation_deg: float = 0.0
 
-## ── смерть: затухание ──
-## Весь fade тела и самоудаление узла — здесь, в персонаже.
-## Держи >= death_knockback_duration, чтобы труп не исчез на середине дуги.
 @export var death_fade_duration: float = 0.5
 @export var death_fade_delay: float = 0.0
 
-## Приоритет отрисовки во время собственной атаки.
-## Атакующий всегда выше всех остальных (и живых, и умирающих).
 @export var z_attack_priority: int = 1000
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -54,11 +60,15 @@ var health: float
 var _is_dead: bool = false
 var _is_busy: bool = false
 var _is_attacking: bool = false
+var _is_blocking: bool = false
 var _z_before_attack: int = 0
 
 var _active_tween: Tween
 var _hit_shake_tween: Tween
 var _flash_tween: Tween
+var _block_flash_tween: Tween
+
+var _block_absorbed: float = 0.0
 var _last_hit_from: Vector2 = Vector2.INF
 var _sprite_base_position: Vector2
 
@@ -66,6 +76,7 @@ const ANIM_IDLE   := &"idle"
 const ANIM_ATTACK := &"attack"
 const ANIM_DAMAGE := &"damage"
 const ANIM_DEATH  := &"death"
+const ANIM_BLOCK  := &"block"
 
 
 func _ready() -> void:
@@ -89,16 +100,14 @@ func is_dead() -> bool:
 	return _is_dead
 
 
-## Атакующий ли персонаж прямо сейчас (подлёт + анимация атаки).
-## Спавнер использует этот флаг, чтобы не перебивать z атакующего
-## во время reflow.
 func is_attacking() -> bool:
 	return _is_attacking
 
 
-## Задаёт приоритет отрисовки всего узла (спрайт + health bar).
-## z_index перебивает y-sort, поэтому лидер останется сверху
-## даже во время knockback/fade при смерти.
+func is_blocking() -> bool:
+	return _is_blocking
+
+
 func set_z_priority(priority: int) -> void:
 	z_index = priority
 
@@ -111,7 +120,6 @@ func attack(enemy: CharacterBase) -> void:
 	_is_busy = true
 	target = enemy
 
-	# Поднимаемся над всеми на время своей атаки.
 	_is_attacking = true
 	_z_before_attack = z_index
 	z_index = z_attack_priority
@@ -131,7 +139,6 @@ func attack(enemy: CharacterBase) -> void:
 	var approach_time := clampf(approach_dist / speed_px, min_phase_duration, max_phase_duration)
 	var retreat_time := clampf(strike_pos.distance_to(idle_point) / speed_px, min_phase_duration, max_phase_duration)
 
-	# 1) Подлёт
 	if approach_dist > 1.0:
 		_active_tween = create_tween()
 		_active_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -140,7 +147,6 @@ func attack(enemy: CharacterBase) -> void:
 		if _is_dead:
 			return
 
-	# 2) Анимация атаки — урон на конкретном кадре
 	_play_anim(ANIM_ATTACK)
 	if weapon:
 		await _await_attack_frame()
@@ -152,7 +158,6 @@ func attack(enemy: CharacterBase) -> void:
 	if _is_dead:
 		return
 
-	# 3) Отход
 	retreat_started.emit()
 
 	_active_tween = create_tween()
@@ -162,9 +167,6 @@ func attack(enemy: CharacterBase) -> void:
 	if _is_dead:
 		return
 
-	# Возвращаем нормальный z. Если за время атаки лидерство сменилось,
-	# спавнер сразу после turn_finished пересчитает z через reflow
-	# (см. подписку turn_finished -> _apply_z_order в спавнере).
 	_is_attacking = false
 	z_index = _z_before_attack
 
@@ -173,11 +175,48 @@ func attack(enemy: CharacterBase) -> void:
 	turn_finished.emit()
 
 
+## Вход в стойку блокирования. Удерживается, пока не вызван unblock().
+## Урон в этот период не проходит (см. take_damage). Ход не тратится:
+## turn_finished здесь НЕ эмитится, таймаута нет.
+## _is_busy = true на время блока — это гарантирует, что attack() не стартует
+## и что снаружи через is_busy() видно «персонаж занят стойкой».
+func block() -> void:
+	if _is_dead or _is_blocking:
+		return
+	if _is_busy:
+		# Нельзя встать в блок посреди атаки/отхода.
+		return
+	_is_busy = true
+	_is_blocking = true
+	_block_absorbed = 0.0
+	if _has_anim(ANIM_BLOCK):
+		_play_anim(ANIM_BLOCK)
+	block_started.emit()
+
+
+## Выход из стойки блокирования. Снимает _is_busy — персонаж снова
+## доступен для атаки и других действий. turn_finished не эмитится.
+func unblock() -> void:
+	if not _is_blocking:
+		return
+	_is_blocking = false
+	_block_absorbed = 0.0
+	_is_busy = false
+	if not _is_dead:
+		_play_anim(ANIM_IDLE)
+	block_ended.emit()
+
+
 func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	if _is_dead:
 		return
 
 	_last_hit_from = from_position
+
+	# Блок перехватывает урон раньше проверки _is_busy (во время блока busy == true).
+	if _is_blocking:
+		await _on_blocked_hit(amount, from_position)
+		return
 
 	if _is_busy or not _has_anim(ANIM_DAMAGE):
 		_apply_damage(amount)
@@ -234,20 +273,24 @@ func _apply_damage(amount: float) -> void:
 
 func _die() -> void:
 	_is_dead = true
+	_is_blocking = false
+	_block_absorbed = 0.0
+
 	if _active_tween and _active_tween.is_valid() and _active_tween.is_running():
 		_active_tween.kill()
 	if _hit_shake_tween and _hit_shake_tween.is_valid():
 		_hit_shake_tween.kill()
 	if _flash_tween and _flash_tween.is_valid():
 		_flash_tween.kill()
+	if _block_flash_tween and _block_flash_tween.is_valid():
+		_block_flash_tween.kill()
+
 	if animated_sprite:
 		animated_sprite.position = _sprite_base_position
 		animated_sprite.modulate = Color.WHITE
 
 	_play_anim(ANIM_DEATH)
 
-	# Сначала сообщаем миру (спавнер прочитает корректный global_position
-	# ещё до того, как knockback-твин сдвинет узел), потом — визуал.
 	died.emit()
 
 	_start_death_knockback()
@@ -256,11 +299,12 @@ func _die() -> void:
 
 # ── internal: реакция на удар ──
 
-## Короткий «флинч» спрайта: смещение от удара и обратно.
-## Не трогает global_position узла — безопасно во время движения/атаки.
-func _play_hit_shake(from_position: Vector2) -> void:
+func _play_hit_shake(from_position: Vector2, distance: float = -1.0) -> void:
 	if not animated_sprite or _is_dead:
 		return
+
+	if distance < 0.0:
+		distance = hit_shake_distance
 
 	var dir := Vector2.UP
 	if from_position != Vector2.INF:
@@ -268,14 +312,11 @@ func _play_hit_shake(from_position: Vector2) -> void:
 		if d.length_squared() > 0.0001:
 			dir = d.normalized()
 
-	var offset := dir * hit_shake_distance
+	var offset := dir * distance
 
 	if _hit_shake_tween and _hit_shake_tween.is_valid():
 		_hit_shake_tween.kill()
 
-	# tween_property берёт текущее значение как старт — если удар
-	# прилетел посреди прошлого шейка, интерполяция начнётся оттуда,
-	# без снапа.
 	_hit_shake_tween = create_tween()
 	_hit_shake_tween.set_trans(Tween.TRANS_QUAD)
 	_hit_shake_tween.tween_property(
@@ -290,9 +331,6 @@ func _play_hit_shake(from_position: Vector2) -> void:
 	).set_ease(Tween.EASE_IN_OUT)
 
 
-## Красная вспышка спрайта при получении урона.
-## Вызывается из _apply_damage — срабатывает на любой удар,
-## в том числе когда персонаж занят или уже проигрывает damage.
 func _flash_damage() -> void:
 	if not animated_sprite or _is_dead:
 		return
@@ -303,7 +341,85 @@ func _flash_damage() -> void:
 	_flash_tween.tween_property(animated_sprite, "modulate", Color.WHITE, flash_out_duration)
 
 
+# ── internal: блок ──
+
+## Визуальный/сигнальный отклик блока: проигрывает block-клип, ждёт тайминг,
+## эквивалентный animation_frame_damage (чтобы синяя вспышка и hit_blocked
+## совпадали по моменту с обычной damage-реакцией), и только потом эмитит
+## сигнал, флэшит и делает отскок.
+## Не меняет _is_blocking и _block_absorbed.
+func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) -> void:
+	if _is_dead:
+		return
+
+	var total := _get_anim_frame_time(ANIM_DAMAGE, animation_frame_damage)
+	var lead := total * clampf(block_anim_lead_ratio, 0.0, 1.0)
+	var rest := total - lead
+
+	if lead > 0.0:
+		await get_tree().create_timer(lead).timeout
+		if _is_dead:
+			return
+	_play_anim(ANIM_BLOCK)
+
+	if rest > 0.0:
+		await get_tree().create_timer(rest).timeout
+		if _is_dead:
+			return
+
+	hit_blocked.emit(amount)
+	_flash_block()
+	_play_hit_shake(from_position, block_shake_distance)
+
+## Ждёт время, эквивалентное проигрыванию `anim` до кадра `frame`
+## (frame / speed секунд). Нужно для коротких клипов вроде block
+## (1 кадр), где нельзя «дойти» до кадра damage-анимации покадрово,
+## но нужно совпасть с её таймингом.
+func _wait_anim_frame_time(anim: StringName, frame: int) -> void:
+	if not _has_anim(anim) or frame <= 0:
+		return
+	var speed := animated_sprite.sprite_frames.get_animation_speed(anim)
+	if speed <= 0.0:
+		return
+	var delay := float(frame) / speed
+	if delay <= 0.0:
+		return
+	await get_tree().create_timer(delay).timeout
+
+func _get_anim_frame_time(anim: StringName, frame: int) -> float:
+	if not _has_anim(anim) or frame <= 0:
+		return 0.0
+	var speed := animated_sprite.sprite_frames.get_animation_speed(anim)
+	if speed <= 0.0:
+		return 0.0
+	return float(frame) / speed
+
+## Обработка попадания во время удерживаемой стойки.
+func _on_blocked_hit(amount: float, from_position: Vector2) -> void:
+	_block_absorbed += amount
+	await play_block_reaction(amount, from_position)
+	if _is_dead:
+		return
+	if block_max_absorbed_damage > 0.0 and _block_absorbed >= block_max_absorbed_damage:
+		unblock()
+
+
+func _flash_block() -> void:
+	if not animated_sprite or _is_dead:
+		return
+	if _block_flash_tween and _block_flash_tween.is_valid():
+		_block_flash_tween.kill()
+	_block_flash_tween = create_tween()
+	_block_flash_tween.tween_property(
+		animated_sprite, "modulate", block_flash_color, block_flash_in_duration
+	)
+	_block_flash_tween.tween_property(
+		animated_sprite, "modulate", Color.WHITE, block_flash_out_duration
+	)
+
+
 # ── internal: смертельный отлёт ──
+# (без изменений относительно предыдущей версии)
 
 func _start_death_knockback() -> void:
 	var from := _last_hit_from
@@ -336,7 +452,6 @@ func _start_death_knockback() -> void:
 		)
 
 
-## Полное затухание + queue_free. Спавнер сюда не вмешивается.
 func _start_death_fade() -> void:
 	var ft := create_tween()
 	if death_fade_delay > 0.0:
