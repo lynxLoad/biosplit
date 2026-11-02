@@ -26,3 +26,5 @@ offset_left = -52.0
 offset_top = -192.0
 offset_right = 73.0
 offset_bottom = -177.0
+shake_pixels = 6.0
+shake_time = 0.1

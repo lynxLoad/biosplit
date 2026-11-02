@@ -13,5 +13,5 @@ weapon = ExtResource("3_65114")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=356963692]
 z_index = 1
 sprite_frames = ExtResource("1_yjtv7")
-animation = &"block"
+animation = &"attack_3"
 offset = Vector2(0, -69)

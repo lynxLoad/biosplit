@@ -24,6 +24,7 @@ enum State { IDLE, MOVING_TO_IDLE, ATTACKING, RETREATING, BLOCKING, HIT, DEAD }
 @export var min_phase_duration: float = 0.08
 @export var max_phase_duration: float = 1.5
 
+## Кадр по умолчанию для анимации реакции на урон. См. _pick_damage().
 @export var animation_frame_damage: int = 1
 
 ## ── hit shake ──
@@ -65,8 +66,6 @@ const HIT_SHAKE_PRESETS := {
 
 @export var death_knockback_distance: float = 100.0
 @export var death_knockback_duration: float = 0.45
-@export var death_knockback_arc: float = 0.0
-@export var death_knockback_rotation_deg: float = 0.0
 
 @export var death_fade_duration: float = 0.5
 @export var death_fade_delay: float = 0.0
@@ -198,10 +197,11 @@ func attack(enemy: CharacterBase) -> void:
 		if id != _action_id:
 			return
 
-	var attack_anim := _get_attack_anim()
+	var pick := _pick_attack()
+	var attack_anim: StringName = pick["anim"]
 	_play_anim(attack_anim)
 	if weapon:
-		await _await_anim_frame(attack_anim, weapon.animation_frame_attack, id)
+		await _await_anim_frame(attack_anim, int(pick["frame"]), id)
 		if id != _action_id:
 			return
 		if is_instance_valid(enemy) and not enemy.is_dead():
@@ -257,21 +257,24 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 		await _on_blocked_hit(amount, from_position)
 		return
 
-	# Не в IDLE (атака/отход/хит) — применяем тихо, не перебиваем анимацию.
-	if _state != State.IDLE or not _has_anim(ANIM_DAMAGE):
+	var pick := _pick_damage()
+	var damage_anim: StringName = pick["anim"]
+
+	# Не в IDLE (атака/отход/хит) или нет анимации — применяем тихо.
+	if _state != State.IDLE or not _has_anim(damage_anim):
 		_apply_damage(amount)
 		return
 
 	var id := _begin_action()
 	_state = State.HIT
-	_play_anim(ANIM_DAMAGE)
-	await _await_anim_frame(ANIM_DAMAGE, animation_frame_damage, id)
+	_play_anim(damage_anim)
+	await _await_anim_frame(damage_anim, int(pick["frame"]), id)
 	if id != _action_id:
 		return
 	_apply_damage(amount)
 	if _state == State.DEAD:
 		return
-	await _await_anim_end(ANIM_DAMAGE, id)
+	await _await_anim_end(damage_anim, id)
 	if id != _action_id:
 		return
 	_state = State.IDLE
@@ -310,9 +313,23 @@ func heal(amount: float) -> void:
 
 # ── hooks for subclasses ──
 
-## Хук выбора анимации атаки. Player переопределяет на random attack_1/attack_2.
-func _get_attack_anim() -> StringName:
-	return ANIM_ATTACK
+## Возвращает { anim: StringName, frame: int } для атаки.
+## База: дефолтная анимация удара + кадр из оружия.
+## Player переопределяет и отдаёт случайный вариант attack_1/2/3 со своим кадром.
+func _pick_attack() -> Dictionary:
+	return {
+		"anim": ANIM_ATTACK,
+		"frame": weapon.animation_frame_attack if weapon else 1,
+	}
+
+
+## Возвращает { anim: StringName, frame: int } для реакции на урон.
+## База: ANIM_DAMAGE + animation_frame_damage.
+func _pick_damage() -> Dictionary:
+	return {
+		"anim": ANIM_DAMAGE,
+		"frame": animation_frame_damage,
+	}
 
 
 ## Вызывается после успешного блокирования (после визуальной реакции).
@@ -360,12 +377,9 @@ func _die() -> void:
 	_block_absorbed = 0.0
 	_begin_action()  # ++id, kill tween
 
-	if _hit_shake_tween and _hit_shake_tween.is_valid():
-		_hit_shake_tween.kill()
-	if _flash_tween and _flash_tween.is_valid():
-		_flash_tween.kill()
-	if _block_flash_tween and _block_flash_tween.is_valid():
-		_block_flash_tween.kill()
+	_kill_tween(_hit_shake_tween)
+	_kill_tween(_flash_tween)
+	_kill_tween(_block_flash_tween)
 
 	if animated_sprite:
 		animated_sprite.position = _sprite_base_position
@@ -422,8 +436,7 @@ func _play_hit_shake(
 		if d.length_squared() > 0.0001:
 			dir = d.normalized()
 
-	if _hit_shake_tween and _hit_shake_tween.is_valid():
-		_hit_shake_tween.kill()
+	_kill_tween(_hit_shake_tween)
 
 	_hit_shake_tween = create_tween()
 	_hit_shake_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -454,10 +467,8 @@ func _play_hit_shake(
 func _flash_damage() -> void:
 	if not animated_sprite or _state == State.DEAD:
 		return
-	if _flash_tween and _flash_tween.is_valid():
-		_flash_tween.kill()
-	if _block_flash_tween and _block_flash_tween.is_valid():
-		_block_flash_tween.kill()
+	_kill_tween(_flash_tween)
+	_kill_tween(_block_flash_tween)
 	_flash_tween = create_tween()
 	_flash_tween.tween_property(animated_sprite, "modulate", flash_color, flash_in_duration)
 	_flash_tween.tween_property(animated_sprite, "modulate", Color.WHITE, flash_out_duration)
@@ -469,7 +480,8 @@ func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) ->
 	if _state == State.DEAD:
 		return
 
-	var total := _get_anim_frame_time(ANIM_DAMAGE, animation_frame_damage)
+	var pick := _pick_damage()
+	var total := _get_anim_frame_time(pick["anim"], int(pick["frame"]))
 	var lead := total * block_anim_lead_ratio
 	var rest := total - lead
 
@@ -518,10 +530,8 @@ func _on_blocked_hit(amount: float, from_position: Vector2) -> void:
 func _flash_block() -> void:
 	if not animated_sprite or _state == State.DEAD:
 		return
-	if _block_flash_tween and _block_flash_tween.is_valid():
-		_block_flash_tween.kill()
-	if _flash_tween and _flash_tween.is_valid():
-		_flash_tween.kill()
+	_kill_tween(_block_flash_tween)
+	_kill_tween(_flash_tween)
 	_block_flash_tween = create_tween()
 	_block_flash_tween.tween_property(
 		animated_sprite, "modulate", block_flash_color, block_flash_in_duration
@@ -543,31 +553,11 @@ func _start_death_knockback() -> void:
 		dir = Vector2.UP
 	dir = dir.normalized()
 
-	var start := global_position
-	var land := start + dir * death_knockback_distance
-	var peak := (start + land) * 0.5 + Vector2(0, -death_knockback_arc)
-	var rot_dir := 1.0 if dir.x >= 0.0 else -1.0
-	var rot_total := deg_to_rad(death_knockback_rotation_deg) * rot_dir
-	var rot_start := 0.0
-	if animated_sprite:
-		rot_start = animated_sprite.rotation
+	var land := global_position + dir * death_knockback_distance
 
-	# Один tween: позиция и поворот синхронны.
 	var pt := create_tween()
-	pt.set_trans(Tween.TRANS_QUAD)
-	pt.tween_method(
-		func(t: float) -> void:
-			# t ∈ [0, 1]: первая половина — к peak, вторая — к land.
-			var pos: Vector2
-			if t < 0.5:
-				pos = start.lerp(peak, t * 2.0)
-			else:
-				pos = peak.lerp(land, (t - 0.5) * 2.0)
-			global_position = pos
-			if animated_sprite:
-				animated_sprite.rotation = lerpf(rot_start, rot_total, t),
-		0.0, 1.0, maxf(death_knockback_duration, 0.01)
-	).set_ease(Tween.EASE_IN_OUT)
+	pt.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	pt.tween_property(self, "global_position", land, maxf(death_knockback_duration, 0.01))
 
 
 func _start_death_fade() -> void:
@@ -643,3 +633,10 @@ func _init_bar(bar: Bar, value: float, max_value: float) -> void:
 func _sync_bar(bar: Bar, value: float, max_value: float) -> void:
 	if bar:
 		bar.update_value(value, max_value)
+
+
+# ── internal: helpers ──
+
+func _kill_tween(tw: Tween) -> void:
+	if tw and tw.is_valid():
+		tw.kill()

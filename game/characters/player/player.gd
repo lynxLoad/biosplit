@@ -1,6 +1,15 @@
 extends CharacterBase
 class_name Player
 
+## Кадр применения урона для каждой анимации атаки.
+## Ключ — имя анимации, значение — кадр, на котором наносится урон.
+## ⚠ Значения — заглушки, подгони под реальные спрайты.
+const _ATTACK_FRAMES := {
+	&"attack_1": 0,
+	&"attack_2": 1,
+	#&"attack_3": 0,
+}
+
 var enemies: Array[CharacterBase] = []
 
 var _attack_locked: bool = false        # ставит BattleManager на время свапа
@@ -15,13 +24,17 @@ func set_attack_locked(value: bool) -> void:
 		_maybe_enter_queued_block()
 
 
-func _get_attack_anim() -> StringName:
-	var variants: Array[StringName] = []
-	if _has_anim(&"attack_1"): variants.append(&"attack_1")
-	if _has_anim(&"attack_2"): variants.append(&"attack_2")
-	if variants.is_empty():
-		return ANIM_ATTACK
-	return variants[randi() % variants.size()]
+## Выбирает случайный вариант атаки из доступных в спрайте и возвращает
+## пару «анимация + кадр» для нанесения урона.
+func _pick_attack() -> Dictionary:
+	var available: Array[StringName] = []
+	for anim in _ATTACK_FRAMES:
+		if _has_anim(anim):
+			available.append(anim)
+	if available.is_empty():
+		return  super()
+	var anim: StringName = available[randi() % available.size()]
+	return {"anim": anim, "frame": _ATTACK_FRAMES[anim]}
 
 
 func _unhandled_input(event: InputEvent) -> void:

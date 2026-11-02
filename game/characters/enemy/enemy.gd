@@ -29,11 +29,10 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 		super.take_damage(amount, from_position)
 		return
 
-	# Реактивный блок — только из IDLE и только если уже не обрабатываем удар.
-	if _state == State.IDLE and not _reactive_pending:
-		if randf() < character_stats.block_chance:
-			_reactive_block(amount, from_position)
-			return
+	# Реактивный блок — только из IDLE и только если удар ещё не обрабатывается.
+	if _state == State.IDLE and not _reactive_pending and randf() < character_stats.block_chance:
+		_reactive_block(amount, from_position)
+		return
 
 	super.take_damage(amount, from_position)
 
@@ -44,8 +43,7 @@ func _reactive_block(amount: float, from_position: Vector2) -> void:
 	_reactive_pending = true
 	_last_hit_from = from_position
 
-	var reduction := get_block_damage_reduction()
-	var leaked := maxf(0.0, amount - reduction)
+	var leaked := maxf(0.0, amount - get_block_damage_reduction())
 
 	await play_block_reaction(amount, from_position)
 	_reactive_pending = false
@@ -64,6 +62,7 @@ func _reactive_block(amount: float, from_position: Vector2) -> void:
 func _schedule_return_to_idle() -> void:
 	if _reactive_block_tween and _reactive_block_tween.is_valid():
 		_reactive_block_tween.kill()
+
 	var hold := maxf(reactive_block_hold, reactive_block_min_hold)
 	_reactive_block_tween = create_tween()
 	_reactive_block_tween.tween_interval(hold)
@@ -73,9 +72,7 @@ func _schedule_return_to_idle() -> void:
 func _return_to_idle_after_block() -> void:
 	if _state != State.IDLE:
 		return
-	if not animated_sprite:
-		return
-	if animated_sprite.animation != ANIM_BLOCK:
+	if not animated_sprite or animated_sprite.animation != ANIM_BLOCK:
 		return
 	_play_anim(ANIM_IDLE)
 

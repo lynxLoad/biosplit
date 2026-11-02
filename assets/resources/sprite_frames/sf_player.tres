@@ -63,7 +63,7 @@ animations = [{
 "texture": ExtResource("5_i7ngm")
 }],
 "loop": 0,
-"name": &"attack_none",
+"name": &"attack_3",
 "speed": 10.0
 }, {
 "frames": [{
