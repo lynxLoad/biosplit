@@ -11,7 +11,8 @@ script = ExtResource("1_g3g3m")
 character_stats = ExtResource("2_u24cp")
 weapon = ExtResource("3_u24cp")
 block_flash_color = Color(1, 0.4, 0.4, 1)
-death_fade_delay = 0.6
+death_knockback_duration = 0.25
+death_fade_delay = 0.8
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2005773418]
 sprite_frames = ExtResource("1_3l8e2")
