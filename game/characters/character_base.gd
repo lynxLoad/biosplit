@@ -108,6 +108,14 @@ func is_blocking() -> bool:
 	return _is_blocking
 
 
+## Сколько урона блок гасит при попадании (плоское вычитание).
+## Гарантированно неотрицательное; при отсутствии ресурса — 0.
+func get_block_damage_reduction() -> float:
+	if character_stats == null:
+		return 0.0
+	return maxf(0.0, character_stats.block_damage_reduction)
+
+
 func set_z_priority(priority: int) -> void:
 	z_index = priority
 
@@ -176,7 +184,8 @@ func attack(enemy: CharacterBase) -> void:
 
 
 ## Вход в стойку блокирования. Удерживается, пока не вызван unblock().
-## Урон в этот период не проходит (см. take_damage). Ход не тратится:
+## Урон в этот период ослабляется на get_block_damage_reduction(); остаток
+## проходит через _apply_damage (см. take_damage). Ход не тратится:
 ## turn_finished здесь НЕ эмитится, таймаута нет.
 ## _is_busy = true на время блока — это гарантирует, что attack() не стартует
 ## и что снаружи через is_busy() видно «персонаж занят стойкой».
@@ -261,12 +270,15 @@ func heal(amount: float) -> void:
 
 # ── internal: урон ──
 
-func _apply_damage(amount: float) -> void:
+## Применяет урон. `flash = false` — тихо (без красной вспышки и shake);
+## используется, когда урон прошёл во время блока (там уже сыграли
+## синяя вспышка и block-shake).
+func _apply_damage(amount: float, flash: bool = true) -> void:
 	health = maxf(0.0, health - amount)
 	damaged.emit(amount)
 	if health <= 0.0:
 		_die()
-	else:
+	elif flash:
 		_flash_damage()
 		_play_hit_shake(_last_hit_from)
 
@@ -336,6 +348,8 @@ func _flash_damage() -> void:
 		return
 	if _flash_tween and _flash_tween.is_valid():
 		_flash_tween.kill()
+	if _block_flash_tween and _block_flash_tween.is_valid():
+		_block_flash_tween.kill()
 	_flash_tween = create_tween()
 	_flash_tween.tween_property(animated_sprite, "modulate", flash_color, flash_in_duration)
 	_flash_tween.tween_property(animated_sprite, "modulate", Color.WHITE, flash_out_duration)
@@ -347,6 +361,11 @@ func _flash_damage() -> void:
 ## эквивалентный animation_frame_damage (чтобы синяя вспышка и hit_blocked
 ## совпадали по моменту с обычной damage-реакцией), и только потом эмитит
 ## сигнал, флэшит и делает отскок.
+##
+## Вспышка всегда синяя — даже если часть урона прошла сквозь блок.
+## Прошедший урон применяется отдельно (без красной вспышки), см.
+## _on_blocked_hit / Enemy._reactive_block.
+##
 ## Не меняет _is_blocking и _block_absorbed.
 func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	if _is_dead:
@@ -395,11 +414,25 @@ func _get_anim_frame_time(anim: StringName, frame: int) -> float:
 	return float(frame) / speed
 
 ## Обработка попадания во время удерживаемой стойки.
+## Блок гасит `get_block_damage_reduction()` урона; остаток применяется
+## тихо (flash = false) — синяя вспышка уже показала блок.
 func _on_blocked_hit(amount: float, from_position: Vector2) -> void:
-	_block_absorbed += amount
+	var reduction := get_block_damage_reduction()
+	var leaked := maxf(0.0, amount - reduction)
+
+	# Учитываем только реально погашенную часть (не больше входящего урона).
+	_block_absorbed += amount - leaked
+
 	await play_block_reaction(amount, from_position)
 	if _is_dead:
 		return
+
+	if leaked > 0.0:
+		# flash = false: только синяя вспышка блока, без красной.
+		_apply_damage(leaked, false)
+		if _is_dead:
+			return
+
 	if block_max_absorbed_damage > 0.0 and _block_absorbed >= block_max_absorbed_damage:
 		unblock()
 
@@ -409,6 +442,8 @@ func _flash_block() -> void:
 		return
 	if _block_flash_tween and _block_flash_tween.is_valid():
 		_block_flash_tween.kill()
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
 	_block_flash_tween = create_tween()
 	_block_flash_tween.tween_property(
 		animated_sprite, "modulate", block_flash_color, block_flash_in_duration
