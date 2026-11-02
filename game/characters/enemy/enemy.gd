@@ -4,10 +4,10 @@ class_name Enemy
 @onready var health_bar: Bar = $HealthBar
 
 @export var reactive_block_hold: float = 0.35
-## Минимальный холд — защита от случайного 0 в инспекторе.
 @export var reactive_block_min_hold: float = 0.15
 
 var _reactive_block_tween: Tween
+var _reactive_pending: bool = false
 
 
 func _ready() -> void:
@@ -21,44 +21,41 @@ func heal(amount: float) -> void:
 
 
 func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
-	if _is_dead:
+	if _state == State.DEAD:
 		return
 
-	# Явный блок (если кто-то вызвал block()) — просто передаём базе:
-	# она сама применит block_damage_reduction.
-	if is_blocking():
+	# Явный блок — база сама применит block_damage_reduction.
+	if _state == State.BLOCKING:
 		super.take_damage(amount, from_position)
 		return
 
-	# Реактивный блок: шанс берётся из CharacterStats.
-	# character_stats гарантированно не null — _ready() делает duplicate().
-	var roll := randf()
-	if roll < character_stats.block_chance:
-		_reactive_block(amount, from_position)
-		return
+	# Реактивный блок — только из IDLE и только если уже не обрабатываем удар.
+	if _state == State.IDLE and not _reactive_pending:
+		if randf() < character_stats.block_chance:
+			_reactive_block(amount, from_position)
+			return
 
 	super.take_damage(amount, from_position)
 
 
-## Реактивный блок — визуальная стойка + ослабление урона на
-## get_block_damage_reduction(). Остаток применяется тихо (flash = false):
-## единственная визуальная вспышка — синяя, из play_block_reaction.
-## Не меняет _is_blocking/_is_busy.
+## Реактивный блок: визуальная стойка + ослабление урона.
+## Не меняет _state — просто показывает блок и тихо применяет остаток.
 func _reactive_block(amount: float, from_position: Vector2) -> void:
-	# _apply_damage использует _last_hit_from для направления отскока.
+	_reactive_pending = true
 	_last_hit_from = from_position
 
 	var reduction := get_block_damage_reduction()
 	var leaked := maxf(0.0, amount - reduction)
 
 	await play_block_reaction(amount, from_position)
-	if _is_dead:
+	_reactive_pending = false
+
+	if _state == State.DEAD:
 		return
 
 	if leaked > 0.0:
-		# flash = false: только синяя вспышка блока, без красной.
 		_apply_damage(leaked, false)
-		if _is_dead:
+		if _state == State.DEAD:
 			return
 
 	_schedule_return_to_idle()
@@ -74,14 +71,11 @@ func _schedule_return_to_idle() -> void:
 
 
 func _return_to_idle_after_block() -> void:
-	if _is_dead:
-		return
-	if is_blocking():
+	if _state != State.IDLE:
 		return
 	if not animated_sprite:
 		return
 	if animated_sprite.animation != ANIM_BLOCK:
-		# Кто-то (damage/attack/retreat) уже перебил block — не трогаем.
 		return
 	_play_anim(ANIM_IDLE)
 

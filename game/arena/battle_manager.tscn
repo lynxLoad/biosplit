@@ -14,25 +14,18 @@ script/source = "extends Node
 	Vector2(780, 500),
 ]
 
-## Точка появления врагов из очереди — за пределами экрана.
-## Важно только X: Y принудительно берётся из последнего слота (enemy_spawns.back().y),
-## чтобы новый враг въезжал строго по высоте последнего слота.
+## X точки появления из очереди (за экраном). Y берётся из последнего слота.
 @export var offscreen_spawn_x: float = 950.0
 
+## Длительность tween'а пересборки. Должна совпадать с move_to_idle_point(reflow_duration)
+## — используется как таймаут ожидания, пока враги доедут.
 @export var reflow_duration: float = 0.3
-@export var death_fade_duration: float = 0.3
 
-## Длительность осветления (fade-in) врага при появлении из очереди.
 @export var spawn_fade_duration: float = 0.3
 
 ## Всего врагов за волну. Первые enemy_spawns.size() — на поле, остальные в очереди.
 @export var total_enemies: int = 6
 
-## Приоритеты отрисовки врагов.
-## Лидер (первый в массиве) всегда выше остальных,
-## а умирающий лидер — ещё выше, чтобы death-анимация не уходила за спины.
-## Атакующий поднимается над всеми через CharacterBase.z_attack_priority
-## (см. _apply_z_order — он пропускает атакующего).
 @export var z_first_enemy: int = 10
 @export var z_other_enemy: int = 0
 @export var z_dying_first: int = 100
@@ -42,68 +35,66 @@ script/source = "extends Node
 var player: Player
 var enemies: Array[CharacterBase] = []
 var _reflow_pending: bool = false
-var _spawned_count: int = 0  # сколько уже заспавнено всего (на поле + выбывшие)
+var _spawned_count: int = 0
 var _reflow_serial: int = 0
 
+
 func _ready() -> void:
-	# Родитель ещё занят настройкой детей — откладываем спавн на idle-тик.
 	_spawn_all.call_deferred()
 
+
 func _spawn_all() -> void:
-	# Игрок
+	assert(player_scene != null, \"BattleManager: player_scene не задан\")
+	assert(enemy_scene != null, \"BattleManager: enemy_scene не задан\")
+	assert(not enemy_spawns.is_empty(), \"BattleManager: enemy_spawns пуст\")
+
 	player = player_scene.instantiate() as Player
+	assert(player != null, \"BattleManager: player_scene должен иметь корень Player\")
 	arena.add_child(player)
 	player.global_position = player_spawn
 	player.reset_idle_point()
-	player.enemies = enemies
-	player.retreat_started.connect(_on_attacker_retreat_started)
+	player.retreat_started.connect(_on_player_retreat_started)
 
-	# Первая партия врагов — до 3-х (по числу слотов), без осветления
 	var initial := mini(enemy_spawns.size(), total_enemies)
 	for i in initial:
-		var e := _spawn_enemy_at(enemy_spawns[i], false)
-		enemies.append(e)
+		enemies.append(_spawn_enemy_at(enemy_spawns[i], false))
 
-	# Массив — ссылка, player.enemies и enemies всегда синхронны
+	# Массив — ссылка, player.enemies и enemies всегда синхронны.
 	player.enemies = enemies
 
-	# Лидер (индекс 0) — поверх остальных врагов.
 	_apply_z_order()
+
 
 func _spawn_enemy_at(pos: Vector2, fade_in: bool) -> CharacterBase:
 	var e := enemy_scene.instantiate() as CharacterBase
+	assert(e != null, \"BattleManager: enemy_scene должен иметь корень CharacterBase\")
 	arena.add_child(e)
 	e.global_position = pos
 	e.reset_idle_point()
 	e.died.connect(_on_enemy_died.bind(e))
-	# После окончания атаки (или движения) врага — пересчитываем z.
-	# Это нужно, потому что во время атаки зомби был поднят над всеми,
-	# а за время атаки лидерство могло смениться.
 	e.turn_finished.connect(_apply_z_order)
 	_spawned_count += 1
 	if fade_in:
 		_start_fade_in(e)
 	return e
 
-## Плавно проявляет врага: alpha 0 → исходная alpha за spawn_fade_duration.
+
 func _start_fade_in(e: CharacterBase) -> void:
 	var final_alpha := e.modulate.a
 	e.modulate.a = 0.0
 	var tw := create_tween()
 	tw.tween_property(e, \"modulate:a\", final_alpha, spawn_fade_duration)
 
-## Точка появления из очереди: X за экраном, Y — строго как у последнего слота.
+
 func _queue_spawn_point() -> Vector2:
-	var last_slot := enemy_spawns[enemy_spawns.size() - 1]
-	return Vector2(offscreen_spawn_x, last_slot.y)
+	assert(not enemy_spawns.is_empty(), \"BattleManager: enemy_spawns пуст\")
+	return Vector2(offscreen_spawn_x, enemy_spawns.back().y)
+
 
 func _has_queued_enemy() -> bool:
 	return _spawned_count < total_enemies
 
-## Расставляет z_index по массиву: лидер (индекс 0) — выше всех,
-## остальные — на базовом уровне.
-## Атакующий пропускается: у него z уже поднят до z_attack_priority,
-## и мы не должны его перебивать во время reflow.
+
 func _apply_z_order() -> void:
 	for i in enemies.size():
 		var e := enemies[i]
@@ -113,37 +104,36 @@ func _apply_z_order() -> void:
 			continue
 		e.set_z_priority(z_first_enemy if i == 0 else z_other_enemy)
 
+
 func _on_enemy_died(enemy: CharacterBase) -> void:
 	var idx := enemies.find(enemy)
 	if idx == -1:
 		return
 
-	# Если умирает лидер — поднимаем его над всеми, чтобы анимация смерти
-	# (knockback/fade) не ушла за спины выживших и нового лидера.
 	if idx == 0:
 		enemy.set_z_priority(z_dying_first)
 
 	enemies.remove_at(idx)
 
-	# Есть враг в очереди — спавним за экраном (Y выровнен по последнему слоту)
-	# с осветлением и ставим в КОНЕЦ массива. Reflow свапнет всех по слотам:
-	#   выжившие сдвинутся влево, заполняя дырку,
-	#   новичок приедет из-за экрана в последний слот (780, 500) по той же высоте.
 	if _has_queued_enemy():
 		var replacement := _spawn_enemy_at(_queue_spawn_point(), true)
 		enemies.append(replacement)
 
-	# Reflow нужен всегда: и когда очередь пуста (сжатие выживших),
-	# и когда есть замена (свап новичка в последний слот + сдвиг выживших).
-	if player and player.is_busy():
+	# Reflow откладываем ТОЛЬКО на время собственной атаки игрока — иначе
+	# если игрок в BLOCKING/HIT, _reflow_pending залипнет навсегда
+	# (retreat_started из этих состояний не эмитится).
+	if is_instance_valid(player) and player.is_attacking():
 		_reflow_pending = true
 	else:
 		_reflow_enemies()
 
-func _on_attacker_retreat_started() -> void:
-	if _reflow_pending:
-		_reflow_pending = false
-		_reflow_enemies()
+
+func _on_player_retreat_started() -> void:
+	if not _reflow_pending:
+		return
+	_reflow_pending = false
+	_reflow_enemies()
+
 
 func _reflow_enemies() -> void:
 	_reflow_serial += 1
@@ -156,16 +146,22 @@ func _reflow_enemies() -> void:
 		var e := enemies[i]
 		if not is_instance_valid(e):
 			continue
-		e.idle_point = enemy_spawns[i]
+		# Защита: массив мог оказаться длиннее слотов (например, если total_enemies
+		# больше enemy_spawns.size() — на самом деле не должен, но defensive).
+		if i >= enemy_spawns.size():
+			push_warning(\"BattleManager: врагов больше, чем слотов (%d >= %d)\" % [i, enemy_spawns.size()])
+			break
+		e.set_idle_point(enemy_spawns[i])
 		e.move_to_idle_point(reflow_duration)
 
 	_apply_z_order()
 
-	# Ждём реального окончания движения (у врагов tween длится reflow_duration).
+	# Ждём полной длительности reflow_duration. Если враги доехали раньше —
+	# это просто лишние миллисекунды; если позже — они и так прервутся по
+	# своему _action_id при следующем изменении состояния.
 	await get_tree().create_timer(reflow_duration).timeout
 
-	# Если за это время стартовал новый reflow — не разблокируем игрока раньше времени,
-	# этим займётся уже новый вызов.
+	# Пока ждали — мог стартовать новый reflow. Тогда unlock сделает он.
 	if serial != _reflow_serial:
 		return
 

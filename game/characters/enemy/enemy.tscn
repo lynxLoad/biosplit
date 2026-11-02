@@ -10,6 +10,8 @@
 script = ExtResource("1_g3g3m")
 character_stats = ExtResource("2_u24cp")
 weapon = ExtResource("3_u24cp")
+hit_shake_preset = 4
+flash_in_duration = 0.06
 block_flash_color = Color(1, 0.4, 0.4, 1)
 death_knockback_duration = 0.25
 death_fade_delay = 0.8
