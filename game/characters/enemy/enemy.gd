@@ -24,12 +24,10 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	if _state == State.DEAD:
 		return
 
-	# Явный блок — база сама применит block_damage_reduction.
 	if _state == State.BLOCKING:
 		super.take_damage(amount, from_position)
 		return
 
-	# Реактивный блок — только из IDLE и только если удар ещё не обрабатывается.
 	if _state == State.IDLE and not _reactive_pending and randf() < character_stats.block_chance:
 		_reactive_block(amount, from_position)
 		return
@@ -37,8 +35,6 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	super.take_damage(amount, from_position)
 
 
-## Реактивный блок: визуальная стойка + ослабление урона.
-## Не меняет _state — просто показывает блок и тихо применяет остаток.
 func _reactive_block(amount: float, from_position: Vector2) -> void:
 	_reactive_pending = true
 	_last_hit_from = from_position
@@ -50,33 +46,26 @@ func _reactive_block(amount: float, from_position: Vector2) -> void:
 
 	if _state == State.DEAD:
 		return
-
 	if leaked > 0.0:
 		_apply_damage(leaked, false)
-		if _state == State.DEAD:
-			return
-
-	_schedule_return_to_idle()
+	if _state != State.DEAD:
+		_schedule_return_to_idle()
 
 
 func _schedule_return_to_idle() -> void:
-	if _reactive_block_tween and _reactive_block_tween.is_valid():
-		_reactive_block_tween.kill()
-
-	var hold := maxf(reactive_block_hold, reactive_block_min_hold)
+	_kill_tween(_reactive_block_tween)
 	_reactive_block_tween = create_tween()
-	_reactive_block_tween.tween_interval(hold)
+	_reactive_block_tween.tween_interval(maxf(reactive_block_hold, reactive_block_min_hold))
 	_reactive_block_tween.tween_callback(_return_to_idle_after_block)
 
 
 func _return_to_idle_after_block() -> void:
-	if _state != State.IDLE:
-		return
-	if not animated_sprite or animated_sprite.animation != ANIM_BLOCK:
-		return
-	_play_anim(ANIM_IDLE)
+	if _state == State.IDLE and animated_sprite and animated_sprite.animation == ANIM_BLOCK:
+		_play_anim(ANIM_IDLE)
 
 
 func _apply_damage(amount: float, flash: bool = true) -> void:
 	super._apply_damage(amount, flash)
 	_sync_bar(health_bar, health, character_stats.max_health)
+	
+	

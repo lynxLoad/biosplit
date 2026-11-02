@@ -6,3 +6,4 @@
 script = ExtResource("1_alds1")
 name = &"Enemy"
 block_damage_reduction = 2.0
+block_chance = 0.4
