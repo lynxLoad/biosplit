@@ -48,11 +48,47 @@ const HIT_SHAKE_PRESETS := {
 @export var block_flash_out_duration: float = 0.12
 @export var block_shake_distance: float = 6.0
 @export var block_max_absorbed_damage: float = 0.0
-@export var death_knockback_distance: float = 100.0
+
+# ── death / corpse ──
+
+## Базовая дистанция отлёта при смерти.
+@export var death_knockback_distance: float = 120.0
 @export var death_knockback_duration: float = 0.45
+
+## Разброс направления, ± радианы. 0.25 ≈ ±14° — траектория читается
+## как "улетел от удара", но трупы не слипаются в одну точку.
+@export var death_knockback_angle_jitter: float = 0.25
+
+## Разброс дистанции, ± доля. 0.3 → от 70% до 130%.
+@export var death_knockback_distance_jitter: float = 0.5
+
+## Минимальное расстояние между центрами трупов.
+## Гарантия, что игрок сможет подойти к каждому для лута.
+@export var death_min_corpse_distance: float = 150.0
+
+## Сколько вариантов перебрать, чтобы найти свободное место.
+@export_range(1, 40) var death_landing_attempts: int = 20
+
+## Ограничение арены. Если size == 0 — берётся видимая область вьюпорта
+## с отступом death_landing_viewport_pad.
+@export var death_landing_bounds: Rect2 = Rect2()
+@export var death_landing_viewport_pad: Vector2 = Vector2(60.0, 60.0)
+
+## true — оригинальное поведение (исчезают, queue_free).
+## false — труп остаётся в сцене для лута.
+@export var death_disappear: bool = false
+
+## Конечная прозрачность трупа (1.0 — полностью видим).
+@export_range(0.0, 1.0) var death_corpse_alpha: float = 1.0
+
+## z_index после приземления. Опускает труп под живых.
+@export var death_corpse_z: int = -1
+
 @export var death_fade_duration: float = 0.5
 @export var death_fade_delay: float = 0.0
 @export var z_attack_priority: int = 1000
+
+const CORPSE_GROUP := &"corpses"
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -70,6 +106,10 @@ var _block_absorbed: float = 0.0
 var _last_hit_from: Vector2 = Vector2.INF
 var _sprite_base_position: Vector2
 var _idle_point_set: bool = false
+
+## Куда труп приземлится (известно сразу при смерти — до начала полёта).
+## Используется другими умирающими, чтобы не сесть на это место.
+var _corpse_landing_pos: Vector2 = Vector2.INF
 
 const ANIM_IDLE   := &"idle"
 const ANIM_ATTACK := &"attack"
@@ -119,6 +159,13 @@ func get_block_damage_reduction() -> float:
 	if character_stats == null:
 		return 0.0
 	return maxf(0.0, character_stats.block_damage_reduction)
+
+
+## Куда труп приземлится. Пока он летит — возвращает точку приземления,
+## а не текущую (промежуточную) позицию. После приземления совпадает
+## с global_position.
+func get_corpse_anchor() -> Vector2:
+	return _corpse_landing_pos if _corpse_landing_pos != Vector2.INF else global_position
 
 
 # ── public actions ──
@@ -274,6 +321,8 @@ func _after_block_hit() -> void:
 	if block_max_absorbed_damage > 0.0 and _block_absorbed >= block_max_absorbed_damage:
 		unblock()
 
+func _hide_ui_on_death() -> void:
+	pass
 
 # ── internal: action lifecycle ──
 
@@ -311,13 +360,16 @@ func _die() -> void:
 		return
 	_state = State.DEAD
 	_block_absorbed = 0.0
-	_begin_action()  # ++id, kill tween
+	_begin_action()
 	_kill_tween(_hit_shake_tween)
 	_kill_tween(_flash_tween)
 	if animated_sprite:
 		animated_sprite.position = _sprite_base_position
 		animated_sprite.modulate = Color.WHITE
+	_hide_ui_on_death()
 	_play_anim(ANIM_DEATH)
+	if not death_disappear:
+		add_to_group(CORPSE_GROUP)
 	died.emit()
 	_start_death_knockback()
 	_start_death_fade()
@@ -441,28 +493,107 @@ func _on_blocked_hit(amount: float, from_position: Vector2) -> void:
 	_after_block_hit()
 
 
-# ── internal: смертельный отлёт ──
+# ── internal: смертельный отлёт и труп ──
 
 func _start_death_knockback() -> void:
 	var from := _last_hit_from
 	if from == Vector2.INF:
 		from = global_position + Vector2.DOWN
-	var dir := global_position - from
-	if dir.length_squared() < 0.0001:
-		dir = Vector2.UP
-	dir = dir.normalized()
-	var land := global_position + dir * death_knockback_distance
+	var base_dir := global_position - from
+	if base_dir.length_squared() < 0.0001:
+		base_dir = Vector2.UP
+	base_dir = base_dir.normalized()
+
+	var land := _find_corpse_landing(base_dir)
+	_corpse_landing_pos = land
+
 	var pt := create_tween()
 	pt.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	pt.tween_property(self, "global_position", land, maxf(death_knockback_duration, 0.01))
+	if not death_disappear:
+		pt.tween_callback(func() -> void: z_index = death_corpse_z)
+
+
+## Ищет точку приземления в конусе `death_knockback_angle_jitter` вокруг `base_dir`.
+## Возвращает первую, которая дальше `death_min_corpse_distance` от всех уже
+## лежащих трупов. Если все заняты — лучшую из найденных (максимальная дистанция
+## до ближайшего трупа).
+func _find_corpse_landing(base_dir: Vector2) -> Vector2:
+	var corpses := get_tree().get_nodes_in_group(CORPSE_GROUP)
+	var bounds := _resolve_landing_bounds()
+
+	var best := global_position + base_dir * death_knockback_distance
+	var best_min_dist := -1.0
+
+	for i in death_landing_attempts:
+		var angle := 0.0
+		if death_knockback_angle_jitter > 0.0:
+			angle = randf_range(-death_knockback_angle_jitter, death_knockback_angle_jitter)
+
+		var dist := death_knockback_distance
+		if death_knockback_distance_jitter > 0.0:
+			dist *= randf_range(1.0 - death_knockback_distance_jitter, 1.0 + death_knockback_distance_jitter)
+
+		var cand := global_position + base_dir.rotated(angle) * dist
+		if bounds.size != Vector2.ZERO:
+			cand = _clamp_to_rect(cand, bounds)
+
+		var min_dist := _min_dist_to_corpses(cand, corpses)
+		if min_dist >= death_min_corpse_distance:
+			return cand
+		if min_dist > best_min_dist:
+			best_min_dist = min_dist
+			best = cand
+
+	return best
+
+
+func _min_dist_to_corpses(pos: Vector2, corpses: Array) -> float:
+	var min_d := INF
+	for c in corpses:
+		if c == self or not is_instance_valid(c):
+			continue
+		var c_pos: Vector2 = c.get_corpse_anchor() if c.has_method("get_corpse_anchor") else c.global_position
+		min_d = minf(min_d, pos.distance_to(c_pos))
+	return min_d
+
+
+func _resolve_landing_bounds() -> Rect2:
+	if death_landing_bounds.size != Vector2.ZERO:
+		return death_landing_bounds
+	var vp := get_viewport()
+	if vp == null:
+		return Rect2()
+	var r := vp.get_visible_rect()
+	var pad := death_landing_viewport_pad
+	var inner := Rect2(r.position + pad, r.size - pad * 2.0)
+	if inner.size.x <= 0.0 or inner.size.y <= 0.0:
+		return Rect2()
+	return inner
+
+
+func _clamp_to_rect(pos: Vector2, rect: Rect2) -> Vector2:
+	return Vector2(
+		clampf(pos.x, rect.position.x, rect.end.x),
+		clampf(pos.y, rect.position.y, rect.end.y)
+	)
 
 
 func _start_death_fade() -> void:
+	if not death_disappear and is_equal_approx(death_corpse_alpha, 1.0):
+		return
+
 	var ft := create_tween()
 	if death_fade_delay > 0.0:
 		ft.tween_interval(death_fade_delay)
-	ft.tween_property(self, "modulate:a", 0.0, death_fade_duration)
-	ft.tween_callback(queue_free)
+
+	if death_disappear:
+		ft.tween_property(self, "modulate:a", 0.0, maxf(death_fade_duration, 0.01))
+		ft.tween_callback(queue_free)
+	elif death_fade_duration > 0.0:
+		ft.tween_property(self, "modulate:a", death_corpse_alpha, death_fade_duration)
+	else:
+		modulate.a = death_corpse_alpha
 
 
 # ── internal: анимации ──

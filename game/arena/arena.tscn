@@ -11,6 +11,7 @@
 [node name="Arena" type="Node2D" unique_id=1800405082]
 
 [node name="Background" type="Node2D" parent="." unique_id=1873647051]
+z_index = -4015
 
 [node name="Parallax2D" type="Parallax2D" parent="Background" unique_id=1655981381]
 scroll_scale = Vector2(0.3, 0.3)
@@ -51,6 +52,7 @@ region_rect = Rect2(-7.84, 1.016, 100000, 94.701)
 scroll_scale = Vector2(3, 3)
 
 [node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D2" unique_id=474648524]
+z_index = 4096
 texture_filter = 1
 texture_repeat = 2
 position = Vector2(320, 0)

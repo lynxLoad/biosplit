@@ -14,6 +14,7 @@ hit_shake_preset = 4
 flash_in_duration = 0.06
 block_flash_color = Color(1, 0.4, 0.4, 1)
 death_knockback_duration = 0.25
+death_landing_bounds = Rect2(0, 0, 1111, 1111)
 death_fade_delay = 0.8
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2005773418]

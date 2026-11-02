@@ -7,6 +7,11 @@ const _ATTACK_FRAMES := {
 	#&"attack_3": 0,
 }
 
+@export var _attack_weights := { 
+	&"attack_1": 1.75,
+	&"attack_2": 1.0,
+}
+
 var enemies: Array[CharacterBase] = []
 
 var _attack_locked: bool = false        # ставит BattleManager на время свапа
@@ -23,13 +28,34 @@ func set_attack_locked(value: bool) -> void:
 
 func _pick_attack() -> Dictionary:
 	var available: Array[StringName] = []
+	var total_weight := 0.0
+
 	for anim in _ATTACK_FRAMES:
 		if _has_anim(anim):
 			available.append(anim)
+			total_weight += _attack_weight(anim)
+
 	if available.is_empty():
 		return super()
-	var anim: StringName = available.pick_random()
-	return {"anim": anim, "frame": _ATTACK_FRAMES[anim]}
+
+	# Если все веса нулевые/отрицательные — равномерный рандом среди доступных
+	if total_weight <= 0.0:
+		var fallback: StringName = available.pick_random()
+		return {"anim": fallback, "frame": _ATTACK_FRAMES[fallback]}
+
+	var roll := randf() * total_weight
+	var chosen: StringName = available[available.size() - 1]
+	for anim in available:
+		roll -= _attack_weight(anim)
+		if roll <= 0.0:
+			chosen = anim
+			break
+
+	return {"anim": chosen, "frame": _ATTACK_FRAMES[chosen]}
+
+
+func _attack_weight(anim: StringName) -> float:
+	return float(_attack_weights.get(anim, 1.0))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -95,5 +121,3 @@ func _nearest_enemy() -> CharacterBase:
 			best_d2 = d2
 			best = e
 	return best
-	
-	

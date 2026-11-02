@@ -67,5 +67,8 @@ func _return_to_idle_after_block() -> void:
 func _apply_damage(amount: float, flash: bool = true) -> void:
 	super._apply_damage(amount, flash)
 	_sync_bar(health_bar, health, character_stats.max_health)
-	
-	
+
+
+func _hide_ui_on_death() -> void:
+	if health_bar:
+		health_bar.visible = false
