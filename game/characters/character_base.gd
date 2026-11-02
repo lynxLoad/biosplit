@@ -23,8 +23,32 @@ signal hit_blocked(amount: float)
 
 @export var animation_frame_damage: int = 1
 
+## ── hit shake: пресеты ──
+enum HitShakePreset { LIGHT, MEDIUM, HEAVY, CRITICAL, JAB, MAGIC, BLOCK_HIT, CUSTOM }
+
+const HIT_SHAKE_PRESETS := {
+	HitShakePreset.LIGHT:     {"distance": 6.0,  "duration": 0.18, "oscillations": 4, "decay": 0.55, "return_mult": 1.2},
+	HitShakePreset.MEDIUM:    {"distance": 14.0, "duration": 0.30, "oscillations": 7, "decay": 0.65, "return_mult": 1.5},
+	HitShakePreset.HEAVY:     {"distance": 24.0, "duration": 0.45, "oscillations": 6, "decay": 0.78, "return_mult": 1.6},
+	HitShakePreset.CRITICAL:  {"distance": 32.0, "duration": 0.55, "oscillations": 9, "decay": 0.80, "return_mult": 2.0},
+	HitShakePreset.JAB:       {"distance": 8.0,  "duration": 0.12, "oscillations": 3, "decay": 0.45, "return_mult": 1.0},
+	HitShakePreset.MAGIC:     {"distance": 10.0, "duration": 0.40, "oscillations": 8, "decay": 0.70, "return_mult": 1.8},
+	HitShakePreset.BLOCK_HIT: {"distance": 6.0,  "duration": 0.20, "oscillations": 5, "decay": 0.60, "return_mult": 1.3},
+}
+
+## Активный пресет. При значении CUSTOM используются экспорты ниже.
+@export var hit_shake_preset: HitShakePreset = HitShakePreset.MEDIUM
+
+## Случайный разброс на каждый удар (±доля от базового значения).
+@export_range(0.0, 0.5) var hit_shake_distance_jitter: float = 0.1
+@export_range(0.0, 0.5) var hit_shake_duration_jitter: float = 0.0
+@export_range(0.0, 0.5) var hit_shake_decay_jitter: float = 0.0
+
+## Используются только при hit_shake_preset == CUSTOM.
 @export var hit_shake_distance: float = 14.0
-@export var hit_shake_duration: float = 0.12
+@export var hit_shake_duration: float = 0.3
+@export_range(0, 10) var hit_shake_oscillations: int = 7
+@export_range(0.0, 1.0) var hit_shake_decay: float = 0.65
 @export var hit_shake_return_mult: float = 1.5
 
 @export var flash_color: Color = Color(1, 0.4, 0.4, 1)
@@ -184,16 +208,10 @@ func attack(enemy: CharacterBase) -> void:
 
 
 ## Вход в стойку блокирования. Удерживается, пока не вызван unblock().
-## Урон в этот период ослабляется на get_block_damage_reduction(); остаток
-## проходит через _apply_damage (см. take_damage). Ход не тратится:
-## turn_finished здесь НЕ эмитится, таймаута нет.
-## _is_busy = true на время блока — это гарантирует, что attack() не стартует
-## и что снаружи через is_busy() видно «персонаж занят стойкой».
 func block() -> void:
 	if _is_dead or _is_blocking:
 		return
 	if _is_busy:
-		# Нельзя встать в блок посреди атаки/отхода.
 		return
 	_is_busy = true
 	_is_blocking = true
@@ -203,8 +221,6 @@ func block() -> void:
 	block_started.emit()
 
 
-## Выход из стойки блокирования. Снимает _is_busy — персонаж снова
-## доступен для атаки и других действий. turn_finished не эмитится.
 func unblock() -> void:
 	if not _is_blocking:
 		return
@@ -222,7 +238,6 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 
 	_last_hit_from = from_position
 
-	# Блок перехватывает урон раньше проверки _is_busy (во время блока busy == true).
 	if _is_blocking:
 		await _on_blocked_hit(amount, from_position)
 		return
@@ -270,9 +285,6 @@ func heal(amount: float) -> void:
 
 # ── internal: урон ──
 
-## Применяет урон. `flash = false` — тихо (без красной вспышки и shake);
-## используется, когда урон прошёл во время блока (там уже сыграли
-## синяя вспышка и block-shake).
 func _apply_damage(amount: float, flash: bool = true) -> void:
 	health = maxf(0.0, health - amount)
 	damaged.emit(amount)
@@ -311,12 +323,47 @@ func _die() -> void:
 
 # ── internal: реакция на удар ──
 
-func _play_hit_shake(from_position: Vector2, distance: float = -1.0) -> void:
+## Возвращает результирующие параметры shake для указанного пресета.
+## Для HitShakePreset.CUSTOM берёт экспорты экземпляра.
+func _resolve_hit_shake(preset_override: int = -1) -> Dictionary:
+	var preset: int = preset_override if preset_override >= 0 else hit_shake_preset
+	if preset == HitShakePreset.CUSTOM:
+		return {
+			"distance": hit_shake_distance,
+			"duration": hit_shake_duration,
+			"oscillations": hit_shake_oscillations,
+			"decay": hit_shake_decay,
+			"return_mult": hit_shake_return_mult,
+		}
+	return HIT_SHAKE_PRESETS.get(preset, HIT_SHAKE_PRESETS[HitShakePreset.MEDIUM])
+
+
+## Запускает hit-shake.
+## distance_override >= 0 — переопределяет distance пресета (используется блоком).
+## preset_override >= 0 — принудительный пресет (используется блоком).
+## Jitter применяется поверх финальных значений.
+func _play_hit_shake(
+	from_position: Vector2,
+	distance_override: float = -1.0,
+	preset_override: int = -1
+) -> void:
 	if not animated_sprite or _is_dead:
 		return
 
-	if distance < 0.0:
-		distance = hit_shake_distance
+	var p := _resolve_hit_shake(preset_override)
+	var distance: float = distance_override if distance_override >= 0.0 else p["distance"]
+	var duration: float = p["duration"]
+	var oscillations: int = p["oscillations"]
+	var decay: float = p["decay"]
+	var return_mult: float = p["return_mult"]
+
+	# Рандомный разброс на каждый удар.
+	if hit_shake_distance_jitter > 0.0:
+		distance *= randf_range(1.0 - hit_shake_distance_jitter, 1.0 + hit_shake_distance_jitter)
+	if hit_shake_duration_jitter > 0.0:
+		duration *= randf_range(1.0 - hit_shake_duration_jitter, 1.0 + hit_shake_duration_jitter)
+	if hit_shake_decay_jitter > 0.0:
+		decay = clampf(decay + randf_range(-hit_shake_decay_jitter, hit_shake_decay_jitter), 0.0, 1.0)
 
 	var dir := Vector2.UP
 	if from_position != Vector2.INF:
@@ -324,23 +371,33 @@ func _play_hit_shake(from_position: Vector2, distance: float = -1.0) -> void:
 		if d.length_squared() > 0.0001:
 			dir = d.normalized()
 
-	var offset := dir * distance
-
 	if _hit_shake_tween and _hit_shake_tween.is_valid():
 		_hit_shake_tween.kill()
 
 	_hit_shake_tween = create_tween()
-	_hit_shake_tween.set_trans(Tween.TRANS_QUAD)
-	_hit_shake_tween.tween_property(
-		animated_sprite, "position",
-		_sprite_base_position + offset,
-		hit_shake_duration
-	).set_ease(Tween.EASE_OUT)
+	_hit_shake_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	oscillations = maxi(1, oscillations)
+	var half_steps := oscillations * 2
+	var step_duration := maxf(duration / float(half_steps + 1), 0.01)
+
+	var amp := distance
+	for i in range(half_steps):
+		var sign := 1.0 if i % 2 == 0 else -1.0
+		var tw := _hit_shake_tween.tween_property(
+			animated_sprite, "position",
+			_sprite_base_position + dir * amp * sign,
+			step_duration
+		)
+		if i == 0:
+			tw.set_ease(Tween.EASE_OUT)
+		amp *= decay
+
 	_hit_shake_tween.tween_property(
 		animated_sprite, "position",
 		_sprite_base_position,
-		hit_shake_duration * hit_shake_return_mult
-	).set_ease(Tween.EASE_IN_OUT)
+		maxf(step_duration * return_mult, 0.01)
+	).set_ease(Tween.EASE_OUT)
 
 
 func _flash_damage() -> void:
@@ -357,22 +414,12 @@ func _flash_damage() -> void:
 
 # ── internal: блок ──
 
-## Визуальный/сигнальный отклик блока: проигрывает block-клип, ждёт тайминг,
-## эквивалентный animation_frame_damage (чтобы синяя вспышка и hit_blocked
-## совпадали по моменту с обычной damage-реакцией), и только потом эмитит
-## сигнал, флэшит и делает отскок.
-##
-## Вспышка всегда синяя — даже если часть урона прошла сквозь блок.
-## Прошедший урон применяется отдельно (без красной вспышки), см.
-## _on_blocked_hit / Enemy._reactive_block.
-##
-## Не меняет _is_blocking и _block_absorbed.
 func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	if _is_dead:
 		return
 
 	var total := _get_anim_frame_time(ANIM_DAMAGE, animation_frame_damage)
-	var lead := total * clampf(block_anim_lead_ratio, 0.0, 1.0)
+	var lead := total * block_anim_lead_ratio
 	var rest := total - lead
 
 	if lead > 0.0:
@@ -388,12 +435,9 @@ func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) ->
 
 	hit_blocked.emit(amount)
 	_flash_block()
-	_play_hit_shake(from_position, block_shake_distance)
+	_play_hit_shake(from_position, block_shake_distance, HitShakePreset.BLOCK_HIT)
 
-## Ждёт время, эквивалентное проигрыванию `anim` до кадра `frame`
-## (frame / speed секунд). Нужно для коротких клипов вроде block
-## (1 кадр), где нельзя «дойти» до кадра damage-анимации покадрово,
-## но нужно совпасть с её таймингом.
+
 func _wait_anim_frame_time(anim: StringName, frame: int) -> void:
 	if not _has_anim(anim) or frame <= 0:
 		return
@@ -405,6 +449,7 @@ func _wait_anim_frame_time(anim: StringName, frame: int) -> void:
 		return
 	await get_tree().create_timer(delay).timeout
 
+
 func _get_anim_frame_time(anim: StringName, frame: int) -> float:
 	if not _has_anim(anim) or frame <= 0:
 		return 0.0
@@ -413,14 +458,11 @@ func _get_anim_frame_time(anim: StringName, frame: int) -> float:
 		return 0.0
 	return float(frame) / speed
 
-## Обработка попадания во время удерживаемой стойки.
-## Блок гасит `get_block_damage_reduction()` урона; остаток применяется
-## тихо (flash = false) — синяя вспышка уже показала блок.
+
 func _on_blocked_hit(amount: float, from_position: Vector2) -> void:
 	var reduction := get_block_damage_reduction()
 	var leaked := maxf(0.0, amount - reduction)
 
-	# Учитываем только реально погашенную часть (не больше входящего урона).
 	_block_absorbed += amount - leaked
 
 	await play_block_reaction(amount, from_position)
@@ -428,7 +470,6 @@ func _on_blocked_hit(amount: float, from_position: Vector2) -> void:
 		return
 
 	if leaked > 0.0:
-		# flash = false: только синяя вспышка блока, без красной.
 		_apply_damage(leaked, false)
 		if _is_dead:
 			return
@@ -454,7 +495,6 @@ func _flash_block() -> void:
 
 
 # ── internal: смертельный отлёт ──
-# (без изменений относительно предыдущей версии)
 
 func _start_death_knockback() -> void:
 	var from := _last_hit_from
