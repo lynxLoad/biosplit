@@ -7,7 +7,7 @@ const _ATTACK_FRAMES := {
 	#&"attack_3": 0,
 }
 
-@export var _attack_weights := { 
+@export var _attack_weights := {
 	&"attack_1": 1.75,
 	&"attack_2": 1.0,
 }
@@ -17,6 +17,14 @@ var enemies: Array[CharacterBase] = []
 var _attack_locked: bool = false        # ставит BattleManager на время свапа
 var _attack_turn_active: bool = false   # ставится на ввод атаки, снимается по turn_finished
 var _block_held: bool = false           # «кнопка блока физически зажата»
+
+
+# Постоянный polling: как только персонаж реально освободился (state == IDLE,
+# нет лока, нет активного хода атаки) — сразу же применяем зажатый блок.
+# Это гарантирует, что блок включится в тот же физ-кадр, когда закончилась
+# анимация удара / hurt / свапа, а не когда-нибудь «позже по событию».
+func _physics_process(delta: float) -> void:
+	_maybe_enter_queued_block()
 
 
 func set_attack_locked(value: bool) -> void:
@@ -79,6 +87,10 @@ func _try_attack() -> void:
 	if is_busy():
 		return
 
+	# Пока враги атакуют — атаковать нельзя.
+	if _any_enemy_attacking():
+		return
+
 	var enemy := _nearest_enemy()
 	if enemy == null:
 		return
@@ -99,13 +111,15 @@ func _try_block() -> void:
 func _wait_turn_end() -> void:
 	if is_busy():
 		await turn_finished
-	await get_tree().process_frame
+	# без лишнего process_frame: следующий физ-кадр всё равно вызовет _maybe_enter_queued_block()
 	_attack_turn_active = false
 	_maybe_enter_queued_block()
 
 
 func _maybe_enter_queued_block() -> void:
-	if not _block_held or _attack_locked or _attack_turn_active or _state != State.IDLE:
+	if not _block_held or _attack_locked or _attack_turn_active:
+		return
+	if _state != State.IDLE:
 		return
 	block()
 
@@ -121,3 +135,10 @@ func _nearest_enemy() -> CharacterBase:
 			best_d2 = d2
 			best = e
 	return best
+
+
+func _any_enemy_attacking() -> bool:
+	for e in enemies:
+		if is_instance_valid(e) and e.is_attacking():
+			return true
+	return false
