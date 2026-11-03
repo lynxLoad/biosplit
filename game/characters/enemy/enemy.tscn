@@ -19,7 +19,7 @@ death_fade_delay = 0.8
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2005773418]
 sprite_frames = ExtResource("1_3l8e2")
-animation = &"idle"
+animation = &"death"
 offset = Vector2(0, -69)
 
 [node name="HealthBar" parent="." unique_id=210445443 instance=ExtResource("3_tf3l0")]

@@ -57,7 +57,7 @@ const HIT_SHAKE_PRESETS := {
 
 ## Разброс направления, ± радианы. 0.25 ≈ ±14° — траектория читается
 ## как "улетел от удара", но трупы не слипаются в одну точку.
-@export var death_knockback_angle_jitter: float = 0.25
+@export var death_knockback_angle_jitter: float = 0.2
 
 ## Разброс дистанции, ± доля. 0.3 → от 70% до 130%.
 @export var death_knockback_distance_jitter: float = 0.5
@@ -80,6 +80,10 @@ const HIT_SHAKE_PRESETS := {
 
 ## Конечная прозрачность трупа (1.0 — полностью видим).
 @export_range(0.0, 1.0) var death_corpse_alpha: float = 1.0
+
+## z_index во время смертельного отлёта. Должен быть выше z_attack_priority,
+## чтобы умирающий враг пролетал НАД живыми.
+@export var death_flying_z: int = 2000
 
 ## z_index после приземления. Опускает труп под живых.
 @export var death_corpse_z: int = -1
@@ -507,11 +511,53 @@ func _start_death_knockback() -> void:
 	var land := _find_corpse_landing(base_dir)
 	_corpse_landing_pos = land
 
+	# Пока летим — выше всех (в т.ч. выше атакующих).
+	z_index = death_flying_z
+
 	var pt := create_tween()
 	pt.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	pt.tween_property(self, "global_position", land, maxf(death_knockback_duration, 0.01))
+
 	if not death_disappear:
-		pt.tween_callback(func() -> void: z_index = death_corpse_z)
+		# Сбрасываем z только когда и отлёт, и анимация смерти завершены.
+		_drop_z_when_death_settled(pt)
+
+
+## Дожидается окончания отлёта И хотя бы одного полного цикла анимации
+## смерти — и только затем опускает труп под живых (death_corpse_z).
+## Вызывается без await из _start_death_knockback: fire-and-forget корутина.
+func _drop_z_when_death_settled(knockback_tween: Tween) -> void:
+	if knockback_tween and knockback_tween.is_valid() and knockback_tween.is_running():
+		await knockback_tween.finished
+
+	if _state != State.DEAD:
+		return
+
+	await _await_death_anim_cycle()
+
+	if _state == State.DEAD:
+		z_index = death_corpse_z
+
+
+## Ждёт один цикл анимации смерти.
+## - Не зацикленная: ждёт сигнал animation_finished.
+## - Зацикленная: ждёт длительность одного цикла (иначе animation_finished
+##   не придёт и мы зависли бы до конца жизни объекта).
+## - Анимации нет / уже не играет: возвращается сразу.
+func _await_death_anim_cycle() -> void:
+	if not _has_anim(ANIM_DEATH):
+		return
+	if not animated_sprite or animated_sprite.animation != ANIM_DEATH:
+		return
+
+	var sf := animated_sprite.sprite_frames
+	if sf.get_animation_loop(ANIM_DEATH):
+		var speed := maxf(sf.get_animation_speed(ANIM_DEATH), 0.01)
+		var count := maxi(sf.get_frame_count(ANIM_DEATH), 1)
+		await get_tree().create_timer(float(count) / speed).timeout
+	else:
+		if animated_sprite.is_playing():
+			await animated_sprite.animation_finished
 
 
 ## Ищет точку приземления в конусе `death_knockback_angle_jitter` вокруг `base_dir`.
