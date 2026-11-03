@@ -1,7 +1,7 @@
 extends CharacterBase
 class_name Enemy
 
-@onready var health_bar: Bar = $HealthBar
+@onready var health_bar: HealthBar = $HealthBar
 
 @export var reactive_block_hold: float = 0.35
 @export var reactive_block_min_hold: float = 0.15
@@ -20,13 +20,13 @@ var _reactive_block_tween: Tween
 var _reactive_pending: bool = false
 
 # ── скрытая энергия атаки ──
-var _attack_energy: float = 50.0
+var _attack_energy: float = randf_range(50, 65)
 var _is_front: bool = false
 var _attack_target: CharacterBase
 
 
 func _ready() -> void:
-	super._ready()
+	super()
 	_init_bar(health_bar, health, character_stats.max_health)
 	add_to_group(ENEMY_GROUP)
 
@@ -133,7 +133,7 @@ func _return_to_idle_after_block() -> void:
 
 
 func _apply_damage(amount: float, flash: bool = true) -> void:
-	super._apply_damage(amount, flash)
+	super(amount, flash)
 	_sync_bar(health_bar, health, character_stats.max_health)
 
 

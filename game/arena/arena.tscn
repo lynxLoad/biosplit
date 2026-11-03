@@ -8,6 +8,83 @@
 [ext_resource type="PackedScene" uid="uid://cimp7lob5mx6a" path="res://game/characters/player/player.tscn" id="6_ld8sx"]
 [ext_resource type="PackedScene" uid="uid://djqbckuyej0ip" path="res://game/characters/enemy/enemy.tscn" id="7_ltahe"]
 
+[sub_resource type="GDScript" id="GDScript_mnys6"]
+resource_name = "battle_camera"
+script/source = "extends Camera2D
+
+## В эту группу игрок должен быть добавлен (add_to_group(\"player\")).
+const PLAYER_GROUP := &\"player\"
+
+@export_group(\"Screen Shake\")
+## Общий множитель амплитуды. Поставь 0.4–0.7, если 6–32 px слишком много.
+@export var shake_scale: float = 0.7
+## Скорость экспоненциального затухания (1/сек). Больше = резче.
+@export var shake_decay: float = 6.0
+## «Частота» шума для ощущения дрожи.
+@export var shake_frequency: float = 25.0
+
+var _base_offset: Vector2
+var _shake_intensity: float = 0.0
+var _phase: float = 0.0
+var _subscribed: Node = null
+
+
+func _ready() -> void:
+	_base_offset = offset
+	_try_subscribe()
+	# Ловим игрока, если он заспавнится позже камеры.
+	get_tree().node_added.connect(_on_node_added)
+
+
+func _on_node_added(node: Node) -> void:
+	if is_instance_valid(_subscribed):
+		return
+	if node.is_node_ready():
+		_try_subscribe()
+	else:
+		node.ready.connect(_try_subscribe, CONNECT_ONE_SHOT)
+
+
+func _try_subscribe() -> void:
+	if is_instance_valid(_subscribed):
+		return
+	var nodes := get_tree().get_nodes_in_group(PLAYER_GROUP)
+	for n in nodes:
+		if _subscribe(n):
+			return
+
+
+func _subscribe(node: Node) -> bool:
+	if node == null or not is_instance_valid(node):
+		return false
+	if not node.has_signal(\"screen_shake_requested\"):
+		return false
+	if not node.screen_shake_requested.is_connected(_on_screen_shake_requested):
+		node.screen_shake_requested.connect(_on_screen_shake_requested)
+	_subscribed = node
+	return true
+
+
+func _on_screen_shake_requested(intensity: float, _duration: float) -> void:
+	# Не даём слабому удару «погасить» сильный, только усиливаем.
+	_shake_intensity = maxf(_shake_intensity, intensity * shake_scale)
+
+
+func _process(delta: float) -> void:
+	if _shake_intensity <= 0.05:
+		if offset != _base_offset:
+			offset = _base_offset
+		return
+
+	_phase += delta * shake_frequency
+	_shake_intensity = lerpf(_shake_intensity, 0.0, clampf(shake_decay * delta, 0.0, 1.0))
+
+	# Две несинхронные синусоиды — дёргано, но без визуального «паттерна».
+	var n1 := sin(_phase * 1.7) + sin(_phase * 3.1) * 0.5
+	var n2 := cos(_phase * 2.3) + sin(_phase * 4.7) * 0.5
+	offset = _base_offset + Vector2(n1, n2) * _shake_intensity
+"
+
 [node name="Arena" type="Node2D" unique_id=1800405082]
 
 [node name="Background" type="Node2D" parent="." unique_id=1873647051]
@@ -25,6 +102,16 @@ offset = Vector2(480, 270)
 region_enabled = true
 region_rect = Rect2(0, 0, 100000, 540)
 
+[node name="Sprite2D2" type="Sprite2D" parent="Background/Parallax2D" unique_id=67219430]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(36, -539)
+texture = ExtResource("1_sljpa")
+offset = Vector2(480, 270)
+flip_v = true
+region_enabled = true
+region_rect = Rect2(0, 0, 100000, 540)
+
 [node name="Parallax2D3" type="Parallax2D" parent="Background" unique_id=2023442318]
 
 [node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D3" unique_id=466596091]
@@ -33,6 +120,16 @@ texture_repeat = 2
 position = Vector2(571, 0)
 texture = ExtResource("2_8eybb")
 offset = Vector2(480, 270)
+region_enabled = true
+region_rect = Rect2(0, 0, 100000, 540)
+
+[node name="Sprite2D2" type="Sprite2D" parent="Background/Parallax2D3" unique_id=659195479]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(571, -539)
+texture = ExtResource("2_8eybb")
+offset = Vector2(480, 270)
+flip_v = true
 region_enabled = true
 region_rect = Rect2(0, 0, 100000, 540)
 
@@ -48,9 +145,30 @@ offset = Vector2(480, 270)
 region_enabled = true
 region_rect = Rect2(-7.84, 1.016, 100000, 94.701)
 
+[node name="Sprite2D2" type="Sprite2D" parent="Background/Parallax2D4" unique_id=1353329852]
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(205, -318)
+texture = ExtResource("3_elpcd")
+offset = Vector2(480, 270)
+flip_v = true
+region_enabled = true
+region_rect = Rect2(-7.84, 1.016, 100000, 94.701)
+
 [node name="Parallax2D2" type="Parallax2D" parent="Background" unique_id=1435114188]
 z_index = 4096
 scroll_scale = Vector2(3, 3)
+
+[node name="Sprite2D2" type="Sprite2D" parent="Background/Parallax2D2" unique_id=829976525]
+z_index = 4096
+texture_filter = 1
+texture_repeat = 2
+position = Vector2(320, 179)
+texture = ExtResource("4_ld8sx")
+offset = Vector2(480, 448)
+flip_v = true
+region_enabled = true
+region_rect = Rect2(0, 0, 100000, 184)
 
 [node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D2" unique_id=474648524]
 z_index = 4096
@@ -62,9 +180,13 @@ offset = Vector2(480, 448)
 region_enabled = true
 region_rect = Rect2(0, 0, 100000, 184)
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=746185389]
+[node name="BattleCamera" type="Camera2D" parent="." unique_id=746185389]
 position = Vector2(480, 270)
 zoom = Vector2(1.001, 1.001)
+script = SubResource("GDScript_mnys6")
+shake_scale = 0.6
+shake_decay = 10.0
+shake_frequency = 30.0
 
 [node name="BattleManager" parent="." unique_id=429190078 instance=ExtResource("5_8eybb")]
 player_scene = ExtResource("6_ld8sx")

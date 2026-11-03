@@ -1,6 +1,9 @@
 extends CharacterBase
 class_name Player
 
+signal screen_shake_requested(intensity: float, duration: float)
+
+const PLAYER_GROUP := &"player"
 const _ATTACK_FRAMES := {
 	&"attack_1": 0,
 	&"attack_2": 1,
@@ -18,6 +21,9 @@ var _attack_locked: bool = false        # ставит BattleManager на вре
 var _attack_turn_active: bool = false   # ставится на ввод атаки, снимается по turn_finished
 var _block_held: bool = false           # «кнопка блока физически зажата»
 
+func _ready() -> void:
+	super()
+	add_to_group(PLAYER_GROUP)
 
 # Постоянный polling: как только персонаж реально освободился (state == IDLE,
 # нет лока, нет активного хода атаки) — сразу же применяем зажатый блок.
@@ -26,6 +32,17 @@ var _block_held: bool = false           # «кнопка блока физиче
 func _physics_process(delta: float) -> void:
 	_maybe_enter_queued_block()
 
+func _apply_damage(amount: float, flash: bool = true) -> void:
+	_emit_screen_shake(amount)
+	super(amount, flash)
+
+func _emit_screen_shake(amount: float) -> void:
+	var p := _resolve_hit_shake()
+	var dist := float(p["distance"])
+	var max_hp := maxf(get_max_health(), 1.0)
+	# 0.5× на «чирик», до 2× на тяжёлый удар по отношению к max HP.
+	var scale := clampf(0.5 + (amount / max_hp) * 1.5, 0.5, 2.0)
+	screen_shake_requested.emit(dist * scale, float(p["duration"]))
 
 func set_attack_locked(value: bool) -> void:
 	var was_locked := _attack_locked
