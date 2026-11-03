@@ -1,5 +1,5 @@
 extends Control
-class_name Bar
+class_name HealthBar
 
 ## Больше = резче (короче анимация). ~25 → ~0.12 с, ~5 → ~0.6 с.
 @export_range(1.0, 40.0, 0.5) var smooth_speed: float = 25.0

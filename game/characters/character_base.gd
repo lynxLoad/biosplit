@@ -20,7 +20,7 @@ enum State { IDLE, MOVING_TO_IDLE, ATTACKING, RETREATING, BLOCKING, HIT, DEAD }
 @export var max_phase_duration: float = 1.5
 @export var animation_frame_damage: int = 1
 
-enum HitShakePreset { LIGHT, MEDIUM, HEAVY, CRITICAL, JAB, MAGIC, BLOCK_HIT, CUSTOM }
+enum HitShakePreset { LIGHT, MEDIUM, HEAVY, CRITICAL, JAB, MAGIC, BLOCK_HIT, CUSTOM, NONE }
 const HIT_SHAKE_PRESETS := {
 	HitShakePreset.LIGHT:     {"distance": 6.0,  "duration": 0.18, "oscillations": 4, "decay": 0.55, "return_mult": 1.2},
 	HitShakePreset.MEDIUM:    {"distance": 14.0, "duration": 0.30, "oscillations": 7, "decay": 0.65, "return_mult": 1.5},
@@ -29,6 +29,7 @@ const HIT_SHAKE_PRESETS := {
 	HitShakePreset.JAB:       {"distance": 8.0,  "duration": 0.12, "oscillations": 3, "decay": 0.45, "return_mult": 1.0},
 	HitShakePreset.MAGIC:     {"distance": 10.0, "duration": 0.40, "oscillations": 8, "decay": 0.70, "return_mult": 1.8},
 	HitShakePreset.BLOCK_HIT: {"distance": 6.0,  "duration": 0.20, "oscillations": 5, "decay": 0.60, "return_mult": 1.3},
+	HitShakePreset.NONE:      {"distance": 0.0,  "duration": 0.0,  "oscillations": 0, "decay": 0.0,  "return_mult": 0.0},
 }
 
 @export var hit_shake_preset: HitShakePreset = HitShakePreset.JAB
@@ -729,12 +730,12 @@ func _await_anim_frame(anim: StringName, frame: int, id: int) -> void:
 
 # ── internal: UI ──
 
-func _init_bar(bar: Bar, value: float, max_value: float) -> void:
+func _init_bar(bar: HealthBar, value: float, max_value: float) -> void:
 	if bar:
 		bar.setup(value, max_value)
 
 
-func _sync_bar(bar: Bar, value: float, max_value: float) -> void:
+func _sync_bar(bar: HealthBar, value: float, max_value: float) -> void:
 	if bar:
 		bar.update_value(value, max_value)
 
