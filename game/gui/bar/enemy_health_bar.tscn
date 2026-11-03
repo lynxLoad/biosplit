@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://cnxwyu88l3w48" path="res://assets/sprites/Enemy_bar_01.png" id="1_qjbse"]
 [ext_resource type="Texture2D" uid="uid://b4ac48u20yjx2" path="res://assets/sprites/Enemy_bar_02.png" id="2_aaiid"]
-[ext_resource type="Script" uid="uid://cfnx41l7gfvxo" path="res://game/characters/bar.gd" id="3_lxggn"]
+[ext_resource type="Script" uid="uid://cfnx41l7gfvxo" path="res://game/gui/bar/bar.gd" id="3_lxggn"]
 
 [node name="EnemyHealthBar" type="Control" unique_id=524117141]
 layout_mode = 3

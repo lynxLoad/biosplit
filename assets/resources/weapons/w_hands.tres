@@ -5,3 +5,4 @@
 [resource]
 script = ExtResource("1_47hxc")
 name = &"Hands"
+damage = 5.0

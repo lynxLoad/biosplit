@@ -1,4 +1,4 @@
-extends CharacterBase
+extends Character
 class_name Enemy
 
 @onready var health_bar: HealthBar = $HealthBar
@@ -22,12 +22,12 @@ var _reactive_pending: bool = false
 # ── скрытая энергия атаки ──
 var _attack_energy: float = randf_range(50, 65)
 var _is_front: bool = false
-var _attack_target: CharacterBase
+var _attack_target: Character
 
 
 func _ready() -> void:
 	super()
-	_init_bar(health_bar, health, character_stats.max_health)
+	_init_bar(health_bar, get_health(), get_max_health())
 	add_to_group(ENEMY_GROUP)
 	if _attack_frames.is_empty():
 		_attack_frames = { &"attack": 0 }
@@ -35,12 +35,10 @@ func _ready() -> void:
 
 # ── энергия атаки ──
 
-## Кого бить. Ставит BattleManager при спавне.
-func set_attack_target(t: CharacterBase) -> void:
+func set_attack_target(t: Character) -> void:
 	_attack_target = t
 
 
-## Флаг «первый стоящий». Ставит BattleManager из _apply_z_order.
 func set_is_front(value: bool) -> void:
 	_is_front = value
 
@@ -52,7 +50,7 @@ func get_attack_energy() -> float:
 func _process(delta: float) -> void:
 	if _state == State.DEAD:
 		return
-	if is_busy():          # копим и бьём только из IDLE
+	if is_busy():
 		return
 	if _attack_target == null or not is_instance_valid(_attack_target) or _attack_target.is_dead():
 		return
@@ -63,10 +61,8 @@ func _process(delta: float) -> void:
 	if _attack_energy < attack_energy_threshold:
 		return
 
-	# Пока игрок атакует — не бьём, но заряд сохраняем.
 	if _attack_target.is_attacking():
 		return
-	# Только один враг атакует за раз.
 	if _any_enemy_attacking():
 		return
 
@@ -87,7 +83,7 @@ func _any_enemy_attacking() -> bool:
 
 func heal(amount: float) -> void:
 	super.heal(amount)
-	_sync_bar(health_bar, health, character_stats.max_health)
+	_sync_bar(health_bar, get_health(), get_max_health())
 
 
 func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
@@ -136,7 +132,7 @@ func _return_to_idle_after_block() -> void:
 
 func _apply_damage(amount: float, flash: bool = true) -> void:
 	super(amount, flash)
-	_sync_bar(health_bar, health, character_stats.max_health)
+	_sync_bar(health_bar, get_health(), get_max_health())
 
 
 func _hide_ui_on_death() -> void:
