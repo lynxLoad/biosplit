@@ -29,6 +29,8 @@ func _ready() -> void:
 	super()
 	_init_bar(health_bar, health, character_stats.max_health)
 	add_to_group(ENEMY_GROUP)
+	if _attack_frames.is_empty():
+		_attack_frames = { &"attack": 0 }
 
 
 # ── энергия атаки ──

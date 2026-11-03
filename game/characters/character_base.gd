@@ -11,7 +11,53 @@ signal hit_blocked(amount: float)
 
 enum State { IDLE, MOVING_TO_IDLE, ATTACKING, RETREATING, BLOCKING, HIT, DEAD }
 
-@export_range(0.0, 1.0) var block_anim_lead_ratio: float = 1
+enum HitShakePreset { LIGHT, MEDIUM, HEAVY, CRITICAL, JAB, MAGIC, BLOCK_HIT, CUSTOM, NONE }
+
+const HIT_SHAKE_PRESETS := {
+	HitShakePreset.LIGHT: {
+		"distance": 6.0, "duration": 0.18, "oscillations": 4,
+		"decay": 0.55, "return_mult": 1.2
+	},
+	HitShakePreset.MEDIUM: {
+		"distance": 14.0, "duration": 0.30, "oscillations": 7,
+		"decay": 0.65, "return_mult": 1.5
+	},
+	HitShakePreset.HEAVY: {
+		"distance": 24.0, "duration": 0.45, "oscillations": 6,
+		"decay": 0.78, "return_mult": 1.6
+	},
+	HitShakePreset.CRITICAL: {
+		"distance": 32.0, "duration": 0.55, "oscillations": 9,
+		"decay": 0.80, "return_mult": 2.0
+	},
+	HitShakePreset.JAB: {
+		"distance": 8.0, "duration": 0.12, "oscillations": 3,
+		"decay": 0.45, "return_mult": 1.0
+	},
+	HitShakePreset.MAGIC: {
+		"distance": 10.0, "duration": 0.40, "oscillations": 8,
+		"decay": 0.70, "return_mult": 1.8
+	},
+	HitShakePreset.BLOCK_HIT: {
+		"distance": 6.0, "duration": 0.20, "oscillations": 5,
+		"decay": 0.60, "return_mult": 1.3
+	},
+	HitShakePreset.NONE: {
+		"distance": 0.0, "duration": 0.0, "oscillations": 0,
+		"decay": 0.0, "return_mult": 0.0
+	},
+}
+
+const ANIM_IDLE := &"idle"
+const ANIM_ATTACK := &"attack"
+const ANIM_DAMAGE := &"damage"
+const ANIM_DEATH := &"death"
+const ANIM_BLOCK := &"block"
+const ANIM_WAIT_TIMEOUT := 3.0
+
+const CORPSE_GROUP := &"corpses"
+
+@export_range(0.0, 1.0) var block_anim_lead_ratio: float = 1.0
 @export var character_stats: CharacterStats
 @export var weapon: Weapon
 @export var strike_distance: float = 80.0
@@ -20,73 +66,71 @@ enum State { IDLE, MOVING_TO_IDLE, ATTACKING, RETREATING, BLOCKING, HIT, DEAD }
 @export var max_phase_duration: float = 1.5
 @export var animation_frame_damage: int = 1
 
-enum HitShakePreset { LIGHT, MEDIUM, HEAVY, CRITICAL, JAB, MAGIC, BLOCK_HIT, CUSTOM, NONE }
-const HIT_SHAKE_PRESETS := {
-	HitShakePreset.LIGHT:     {"distance": 6.0,  "duration": 0.18, "oscillations": 4, "decay": 0.55, "return_mult": 1.2},
-	HitShakePreset.MEDIUM:    {"distance": 14.0, "duration": 0.30, "oscillations": 7, "decay": 0.65, "return_mult": 1.5},
-	HitShakePreset.HEAVY:     {"distance": 24.0, "duration": 0.45, "oscillations": 6, "decay": 0.78, "return_mult": 1.6},
-	HitShakePreset.CRITICAL:  {"distance": 32.0, "duration": 0.55, "oscillations": 9, "decay": 0.80, "return_mult": 2.0},
-	HitShakePreset.JAB:       {"distance": 8.0,  "duration": 0.12, "oscillations": 3, "decay": 0.45, "return_mult": 1.0},
-	HitShakePreset.MAGIC:     {"distance": 10.0, "duration": 0.40, "oscillations": 8, "decay": 0.70, "return_mult": 1.8},
-	HitShakePreset.BLOCK_HIT: {"distance": 6.0,  "duration": 0.20, "oscillations": 5, "decay": 0.60, "return_mult": 1.3},
-	HitShakePreset.NONE:      {"distance": 0.0,  "duration": 0.0,  "oscillations": 0, "decay": 0.0,  "return_mult": 0.0},
-}
+@export var _attack_frames: Dictionary[StringName, int] = {}
+@export var _attack_weights: Dictionary[StringName, int] = {}
 
 @export var hit_shake_preset: HitShakePreset = HitShakePreset.JAB
 @export_range(0.0, 0.5) var hit_shake_distance_jitter: float = 0.1
 @export_range(0.0, 0.5) var hit_shake_duration_jitter: float = 0.0
 @export_range(0.0, 0.5) var hit_shake_decay_jitter: float = 0.0
+
 @export var hit_shake_distance: float = 14.0
 @export var hit_shake_duration: float = 0.3
 @export_range(0, 10) var hit_shake_oscillations: int = 7
 @export_range(0.0, 1.0) var hit_shake_decay: float = 0.65
 @export var hit_shake_return_mult: float = 1.5
-@export var flash_color: Color = Color(1, 0.4, 0.4, 1)
+
+@export var flash_color: Color = Color(1.0, 0.4, 0.4, 1.0)
 @export var flash_in_duration: float = 0.05
 @export var flash_out_duration: float = 0.1
-@export var block_flash_color: Color = Color(0.4, 0.65, 1.0, 1)
+
+@export var block_flash_color: Color = Color(0.4, 0.65, 1.0, 1.0)
 @export var block_flash_in_duration: float = 0.03
 @export var block_flash_out_duration: float = 0.12
 @export var block_shake_distance: float = 6.0
 @export var block_max_absorbed_damage: float = 0.0
 
+# ── juice ──
+
+## Короткая пауза анимации в момент получения урона.
+@export_range(0.0, 0.25) var hit_stop_duration: float = 0.06
+
+## Замедление анимации непосредственно перед ударным кадром.
+@export_range(0.1, 1.0) var attack_anticipation_speed: float = 0.45
+
+## Ускорение анимации сразу после ударного кадра.
+@export_range(1.0, 4.0) var attack_impact_speed: float = 2.0
+
+## За сколько кадров до ударного кадра включать anticipation.
+@export_range(0, 5) var attack_anticipation_frames: int = 2
+
+## Микро-рывок корпуса вперёд в начале атаки.
+@export_range(0.0, 16.0) var attack_lunge_distance: float = 4.0
+
+## Отдача корпуса назад в момент удара.
+@export_range(0.0, 16.0) var attack_recoil_distance: float = 5.0
+
+## Отдача при успешном блоке.
+@export_range(0.0, 16.0) var block_recoil_distance: float = 4.0
+
+## Высота дуги смертельного отлёта.
+@export_range(0.0, 32.0) var death_arc_height: float = 8.0
+
 # ── death / corpse ──
 
-## Базовая дистанция отлёта при смерти.
 @export var death_knockback_distance: float = 120.0
 @export var death_knockback_speed: float = 500.0
-
-## Разброс направления, ± радианы. 0.25 ≈ ±14° — траектория читается
-## как "улетел от удара", но трупы не слипаются в одну точку.
 @export var death_knockback_angle_jitter: float = 0.2
-
-## Разброс дистанции, ± доля. 0.3 → от 70% до 130%.
 @export var death_knockback_distance_jitter: float = 0.3
-
-## Минимальное расстояние между центрами трупов.
-## Гарантия, что игрок сможет подойти к каждому для лута.
 @export var death_min_corpse_distance: float = 150.0
-
-## Сколько вариантов перебрать, чтобы найти свободное место.
 @export_range(1, 40) var death_landing_attempts: int = 40
 
-## Ограничение арены. Если size == 0 — берётся видимая область вьюпорта
-## с отступом death_landing_viewport_pad.
 @export var death_landing_bounds: Rect2 = Rect2()
 @export var death_landing_viewport_pad: Vector2 = Vector2(60.0, 60.0)
 
-## true — оригинальное поведение (исчезают, queue_free).
-## false — труп остаётся в сцене для лута.
 @export var death_disappear: bool = false
-
-## Конечная прозрачность трупа (1.0 — полностью видим).
 @export_range(0.0, 1.0) var death_corpse_alpha: float = 1.0
-
-## z_index во время смертельного отлёта. Должен быть выше z_attack_priority,
-## чтобы умирающий враг пролетал НАД живыми.
 @export var death_flying_z: int = 2000
-
-## z_index после приземления. Опускает труп под живых.
 @export var death_corpse_z: int = -1
 @export_range(0, 4096) var death_corpse_z_sort_span: int = 1500
 @export var death_corpse_sort_y_range: Vector2 = Vector2.ZERO
@@ -94,8 +138,6 @@ const HIT_SHAKE_PRESETS := {
 @export var death_fade_duration: float = 0.5
 @export var death_fade_delay: float = 0.0
 @export var z_attack_priority: int = 1000
-
-const CORPSE_GROUP := &"corpses"
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -106,37 +148,35 @@ var health: float
 var _state: State = State.IDLE
 var _action_id: int = 0
 var _z_before_attack: int = 0
+
 var _active_tween: Tween
 var _hit_shake_tween: Tween
 var _flash_tween: Tween
+var _idle_bob_tween: Tween
+var _recoil_tween: Tween
+
 var _block_absorbed: float = 0.0
 var _last_hit_from: Vector2 = Vector2.INF
 var _sprite_base_position: Vector2
 var _idle_point_set: bool = false
-
-## Куда труп приземлится (известно сразу при смерти — до начала полёта).
-## Используется другими умирающими, чтобы не сесть на это место.
+var _hit_stop_token: int = 0
 var _corpse_landing_pos: Vector2 = Vector2.INF
-
-const ANIM_IDLE   := &"idle"
-const ANIM_ATTACK := &"attack"
-const ANIM_DAMAGE := &"damage"
-const ANIM_DEATH  := &"death"
-const ANIM_BLOCK  := &"block"
-const ANIM_WAIT_TIMEOUT := 3.0
 
 
 func _ready() -> void:
 	if character_stats == null:
 		push_error("CharacterBase: character_stats не задан на %s" % name)
 		character_stats = CharacterStats.new()
+
 	character_stats = character_stats.duplicate()
 	health = character_stats.max_health
+
 	if not _idle_point_set:
 		reset_idle_point()
+
 	if animated_sprite:
 		_sprite_base_position = animated_sprite.position
-	_play_anim(ANIM_IDLE)
+		_play_anim(ANIM_IDLE)
 
 
 # ── idle point ──
@@ -153,13 +193,32 @@ func reset_idle_point() -> void:
 
 # ── state queries ──
 
-func is_busy() -> bool: return _state != State.IDLE and _state != State.DEAD
-func is_dead() -> bool: return _state == State.DEAD
-func is_attacking() -> bool: return _state == State.ATTACKING or _state == State.RETREATING
-func is_blocking() -> bool: return _state == State.BLOCKING
-func get_health() -> float: return health
-func get_max_health() -> float: return character_stats.max_health if character_stats else 0.0
-func set_z_priority(priority: int) -> void: z_index = priority
+func is_busy() -> bool:
+	return _state != State.IDLE and _state != State.DEAD
+
+
+func is_dead() -> bool:
+	return _state == State.DEAD
+
+
+func is_attacking() -> bool:
+	return _state == State.ATTACKING or _state == State.RETREATING
+
+
+func is_blocking() -> bool:
+	return _state == State.BLOCKING
+
+
+func get_health() -> float:
+	return health
+
+
+func get_max_health() -> float:
+	return character_stats.max_health if character_stats else 0.0
+
+
+func set_z_priority(priority: int) -> void:
+	z_index = priority
 
 
 func get_block_damage_reduction() -> float:
@@ -168,9 +227,6 @@ func get_block_damage_reduction() -> float:
 	return maxf(0.0, character_stats.block_damage_reduction)
 
 
-## Куда труп приземлится. Пока он летит — возвращает точку приземления,
-## а не текущую (промежуточную) позицию. После приземления совпадает
-## с global_position.
 func get_corpse_anchor() -> Vector2:
 	return _corpse_landing_pos if _corpse_landing_pos != Vector2.INF else global_position
 
@@ -186,11 +242,13 @@ func attack(enemy: CharacterBase) -> void:
 	var id := _begin_action()
 	_state = State.ATTACKING
 	target = enemy
+
 	_z_before_attack = z_index
 	z_index = z_attack_priority
 
 	var start := global_position
 	var dir := start - enemy.global_position
+
 	if dir.length_squared() < 0.0001:
 		dir = Vector2.RIGHT
 	dir = dir.normalized()
@@ -201,26 +259,42 @@ func attack(enemy: CharacterBase) -> void:
 
 	var speed_px := maxf(character_stats.speed, 0.01) * pixels_per_unit
 	var approach_dist := start.distance_to(strike_pos)
+	var retreat_dist := strike_pos.distance_to(idle_point)
+
 	var approach_time := clampf(approach_dist / speed_px, min_phase_duration, max_phase_duration)
-	var retreat_time := clampf(strike_pos.distance_to(idle_point) / speed_px, min_phase_duration, max_phase_duration)
+	var retreat_time := clampf(retreat_dist / speed_px, min_phase_duration, max_phase_duration)
 
 	if approach_dist > 1.0:
 		_active_tween = create_tween()
 		_active_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		_active_tween.tween_property(self, "global_position", strike_pos, approach_time)
+
 		await _wait_tween(_active_tween, id)
 		if id != _action_id:
 			return
 
 	var pick := _pick_attack()
 	var attack_anim: StringName = pick["anim"]
+	var impact_frame := int(pick["frame"])
+
 	_play_anim(attack_anim)
+	_play_attack_lunge(dir)
+
 	if weapon:
-		await _await_anim_frame(attack_anim, int(pick["frame"]), id)
+		await _await_anim_frame(attack_anim, impact_frame, id)
 		if id != _action_id:
 			return
-		if is_instance_valid(enemy) and not enemy.is_dead():
-			enemy.take_damage(weapon.damage, global_position)
+
+		await _play_attack_anticipation(attack_anim, impact_frame, id)
+		if id != _action_id:
+			return
+
+	if is_instance_valid(enemy) and not enemy.is_dead():
+		enemy.take_damage(weapon.damage, global_position)
+
+	_play_attack_impact(attack_anim)
+	_play_attack_recoil(dir)
+
 	await _await_anim_end(attack_anim, id)
 	if id != _action_id:
 		return
@@ -231,6 +305,7 @@ func attack(enemy: CharacterBase) -> void:
 	_active_tween = create_tween()
 	_active_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_active_tween.tween_property(self, "global_position", idle_point, retreat_time)
+
 	await _wait_tween(_active_tween, id)
 	if id != _action_id:
 		return
@@ -238,33 +313,41 @@ func attack(enemy: CharacterBase) -> void:
 	z_index = _z_before_attack
 	_state = State.IDLE
 	_play_anim(ANIM_IDLE)
+
 	turn_finished.emit()
 
 
 func block() -> void:
 	if _state not in [State.IDLE, State.MOVING_TO_IDLE]:
 		return
+
 	_begin_action()
 	_state = State.BLOCKING
 	_block_absorbed = 0.0
+
 	if _has_anim(ANIM_BLOCK):
 		_play_anim(ANIM_BLOCK)
+
 	block_started.emit()
 
 
 func unblock() -> void:
 	if _state != State.BLOCKING:
 		return
+
 	_block_absorbed = 0.0
 	_state = State.IDLE
+
 	if _has_anim(ANIM_IDLE):
 		_play_anim(ANIM_IDLE)
+
 	block_ended.emit()
 
 
 func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	if _state == State.DEAD:
 		return
+
 	_last_hit_from = from_position
 
 	if _state == State.BLOCKING:
@@ -280,15 +363,21 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 
 	var id := _begin_action()
 	_state = State.HIT
+
 	_play_anim(damage_anim)
+
 	await _await_anim_frame(damage_anim, int(pick["frame"]), id)
 	if id != _action_id:
 		return
+
 	_apply_damage(amount)
+
 	await _await_anim_end(damage_anim, id)
 	if id != _action_id:
 		return
+
 	_state = State.IDLE
+
 	if _has_anim(ANIM_IDLE):
 		_play_anim(ANIM_IDLE)
 
@@ -296,28 +385,72 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 func move_to_idle_point(duration: float = 0.3) -> void:
 	if _state not in [State.IDLE, State.MOVING_TO_IDLE]:
 		return
+
 	var id := _begin_action()
 	_state = State.MOVING_TO_IDLE
+
 	_active_tween = create_tween()
 	_active_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 	_active_tween.tween_property(self, "global_position", idle_point, duration)
+
 	await _wait_tween(_active_tween, id)
 	if id != _action_id:
 		return
+
 	_state = State.IDLE
+	_play_anim(ANIM_IDLE)
+
 	turn_finished.emit()
 
 
 func heal(amount: float) -> void:
 	if _state == State.DEAD or amount <= 0.0:
 		return
+
 	health = minf(character_stats.max_health, health + amount)
 
 
 # ── hooks for subclasses ──
 
 func _pick_attack() -> Dictionary:
-	return {"anim": ANIM_ATTACK, "frame": weapon.animation_frame_attack if weapon else 1}
+	if _attack_frames.is_empty():
+		return {
+			"anim": ANIM_ATTACK,
+			"frame": weapon.animation_frame_attack if weapon else 1,
+		}
+
+	var available: Array[StringName] = []
+	var total_weight := 0.0
+
+	for anim in _attack_frames:
+		if _has_anim(anim):
+			available.append(anim)
+			total_weight += _attack_weight(anim)
+
+	if available.is_empty():
+		return {
+			"anim": ANIM_ATTACK,
+			"frame": weapon.animation_frame_attack if weapon else 1,
+		}
+
+	if total_weight <= 0.0:
+		var fallback: StringName = available.pick_random()
+		return {"anim": fallback, "frame": _attack_frames[fallback]}
+
+	var roll := randf() * total_weight
+	var chosen: StringName = available[available.size() - 1]
+
+	for anim in available:
+		roll -= _attack_weight(anim)
+		if roll <= 0.0:
+			chosen = anim
+			break
+
+	return {"anim": chosen, "frame": _attack_frames[chosen]}
+
+
+func _attack_weight(anim: StringName) -> float:
+	return float(_attack_weights.get(anim, 1.0))
 
 
 func _pick_damage() -> Dictionary:
@@ -328,10 +461,12 @@ func _after_block_hit() -> void:
 	if block_max_absorbed_damage > 0.0 and _block_absorbed >= block_max_absorbed_damage:
 		unblock()
 
+
 func _hide_ui_on_death() -> void:
 	pass
 
-# ── internal: action lifecycle ──
+
+# ── action lifecycle ──
 
 func _begin_action() -> int:
 	_cancel_active_tween()
@@ -346,92 +481,259 @@ func _cancel_active_tween() -> void:
 
 func _wait_tween(tw: Tween, id: int) -> void:
 	await get_tree().process_frame
+
 	while id == _action_id and tw.is_valid() and tw.is_running():
 		await get_tree().process_frame
 
+# ── juice: hit stop ──
 
-# ── internal: урон ──
+func _play_hit_stop(duration: float = hit_stop_duration) -> void:
+	if duration <= 0.0 or not animated_sprite:
+		return
+
+	_hit_stop_token += 1
+	var token := _hit_stop_token
+
+	var old_speed := animated_sprite.speed_scale
+	animated_sprite.speed_scale = 0.0
+
+	await get_tree().create_timer(duration).timeout
+
+	if token != _hit_stop_token or not is_instance_valid(animated_sprite):
+		return
+
+	animated_sprite.speed_scale = old_speed
+
+
+# ── juice: attack ──
+
+func _play_attack_lunge(dir: Vector2) -> void:
+	if not animated_sprite or attack_lunge_distance <= 0.0:
+		return
+
+	_kill_tween(_recoil_tween)
+
+	_recoil_tween = create_tween()
+	_recoil_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	_recoil_tween.tween_property(
+		animated_sprite,
+		"position",
+		_sprite_base_position - dir * attack_lunge_distance,
+		0.06
+	)
+
+	_recoil_tween.tween_property(
+		animated_sprite,
+		"position",
+		_sprite_base_position,
+		0.08
+	)
+
+
+func _play_attack_recoil(dir: Vector2) -> void:
+	if not animated_sprite or attack_recoil_distance <= 0.0:
+		return
+
+	_kill_tween(_recoil_tween)
+
+	_recoil_tween = create_tween()
+	_recoil_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	_recoil_tween.tween_property(
+		animated_sprite,
+		"position",
+		_sprite_base_position + dir * attack_recoil_distance,
+		0.05
+	)
+
+	_recoil_tween.tween_property(
+		animated_sprite,
+		"position",
+		_sprite_base_position,
+		0.10
+	)
+
+
+func _play_attack_anticipation(anim: StringName, impact_frame: int, id: int) -> void:
+	if not animated_sprite or not _has_anim(anim):
+		return
+
+	if attack_anticipation_frames <= 0 or attack_anticipation_speed >= 1.0:
+		return
+
+	var frame_count := animated_sprite.sprite_frames.get_frame_count(anim)
+	var target_frame := clampi(
+		impact_frame - attack_anticipation_frames,
+		0,
+		maxi(frame_count - 1, 0)
+	)
+
+	var old_speed := animated_sprite.speed_scale
+	animated_sprite.speed_scale = attack_anticipation_speed
+
+	while id == _action_id \
+			and animated_sprite.animation == anim \
+			and animated_sprite.is_playing() \
+			and animated_sprite.frame < target_frame:
+		await animated_sprite.frame_changed
+
+	if id != _action_id or not is_instance_valid(animated_sprite):
+		return
+
+	animated_sprite.speed_scale = old_speed
+
+
+func _play_attack_impact(anim: StringName) -> void:
+	if not animated_sprite or attack_impact_speed <= 1.0:
+		return
+
+	var old_speed := animated_sprite.speed_scale
+	animated_sprite.speed_scale = attack_impact_speed
+
+	var impact_time := _get_anim_frame_time(anim, 1)
+	await get_tree().create_timer(maxf(impact_time * 0.5, 0.02)).timeout
+
+	if is_instance_valid(animated_sprite):
+		animated_sprite.speed_scale = old_speed
+
+
+# ── damage ──
 
 func _apply_damage(amount: float, flash: bool = true) -> void:
 	health = maxf(0.0, health - amount)
 	damaged.emit(amount)
+
 	if health <= 0.0:
 		_die()
-	elif flash:
+		return
+
+	if flash:
 		_flash_damage()
-		_play_hit_shake(_last_hit_from)
+
+	_play_hit_shake(_last_hit_from)
+	_play_hit_stop()
 
 
 func _die() -> void:
 	if _state == State.DEAD:
 		return
+
 	_state = State.DEAD
 	_block_absorbed = 0.0
+
 	_begin_action()
 	_kill_tween(_hit_shake_tween)
 	_kill_tween(_flash_tween)
+	_kill_tween(_idle_bob_tween)
+	_kill_tween(_recoil_tween)
+
 	if animated_sprite:
 		animated_sprite.position = _sprite_base_position
 		animated_sprite.modulate = Color.WHITE
+
 	_hide_ui_on_death()
 	_play_anim(ANIM_DEATH)
+
 	if not death_disappear:
 		add_to_group(CORPSE_GROUP)
+
 	died.emit()
 	_start_death_knockback()
 	_start_death_fade()
 
 
-# ── internal: реакция на удар ──
+# ── hit reaction ──
 
 func _resolve_hit_shake(preset_override: int = -1) -> Dictionary:
 	var preset: int = preset_override if preset_override >= 0 else hit_shake_preset
+
 	if preset == HitShakePreset.CUSTOM:
-		return {"distance": hit_shake_distance, "duration": hit_shake_duration,
-				"oscillations": hit_shake_oscillations, "decay": hit_shake_decay,
-				"return_mult": hit_shake_return_mult}
+		return {
+			"distance": hit_shake_distance,
+			"duration": hit_shake_duration,
+			"oscillations": hit_shake_oscillations,
+			"decay": hit_shake_decay,
+			"return_mult": hit_shake_return_mult,
+		}
+
 	return HIT_SHAKE_PRESETS.get(preset, HIT_SHAKE_PRESETS[HitShakePreset.MEDIUM])
 
 
-func _play_hit_shake(from_position: Vector2, distance_override: float = -1.0, preset_override: int = -1) -> void:
+func _play_hit_shake(
+	from_position: Vector2,
+	distance_override: float = -1.0,
+	preset_override: int = -1
+) -> void:
 	if not animated_sprite or _state == State.DEAD:
 		return
 
-	var p := _resolve_hit_shake(preset_override)
-	var distance: float = distance_override if distance_override >= 0.0 else p["distance"]
-	var duration: float = p["duration"]
-	var oscillations: int = maxi(1, p["oscillations"])
-	var decay: float = p["decay"]
-	var return_mult: float = p["return_mult"]
+	var preset := _resolve_hit_shake(preset_override)
+
+	var distance: float = distance_override if distance_override >= 0.0 else preset["distance"]
+	var duration: float = preset["duration"]
+	var oscillations: int = maxi(1, preset["oscillations"])
+	var decay: float = preset["decay"]
+	var return_mult: float = preset["return_mult"]
 
 	if hit_shake_distance_jitter > 0.0:
-		distance *= randf_range(1.0 - hit_shake_distance_jitter, 1.0 + hit_shake_distance_jitter)
+		distance *= randf_range(
+			1.0 - hit_shake_distance_jitter,
+			1.0 + hit_shake_distance_jitter
+		)
+
 	if hit_shake_duration_jitter > 0.0:
-		duration *= randf_range(1.0 - hit_shake_duration_jitter, 1.0 + hit_shake_duration_jitter)
+		duration *= randf_range(
+			1.0 - hit_shake_duration_jitter,
+			1.0 + hit_shake_duration_jitter
+		)
+
 	if hit_shake_decay_jitter > 0.0:
-		decay = clampf(decay + randf_range(-hit_shake_decay_jitter, hit_shake_decay_jitter), 0.0, 1.0)
+		decay = clampf(
+			decay + randf_range(-hit_shake_decay_jitter, hit_shake_decay_jitter),
+			0.0,
+			1.0
+		)
 
 	var dir := Vector2.UP
+
 	if from_position != Vector2.INF:
-		var d := global_position - from_position
-		if d.length_squared() > 0.0001:
-			dir = d.normalized()
+		var delta := global_position - from_position
+		if delta.length_squared() > 0.0001:
+			dir = delta.normalized()
 
 	_kill_tween(_hit_shake_tween)
+
 	_hit_shake_tween = create_tween()
 	_hit_shake_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	var half_steps := oscillations * 2
 	var step_duration := maxf(duration / float(half_steps + 1), 0.01)
 	var amp := distance
+
 	for i in range(half_steps):
-		var tw := _hit_shake_tween.tween_property(animated_sprite, "position",
-			_sprite_base_position + dir * amp * (1.0 if i % 2 == 0 else -1.0), step_duration)
+		var target := _sprite_base_position + dir * amp
+		if i % 2 == 1:
+			target = _sprite_base_position - dir * amp
+
+		var tweener := _hit_shake_tween.tween_property(
+			animated_sprite,
+			"position",
+			target,
+			step_duration
+		)
+
 		if i == 0:
-			tw.set_ease(Tween.EASE_OUT)
+			tweener.set_ease(Tween.EASE_OUT)
+
 		amp *= decay
-	_hit_shake_tween.tween_property(animated_sprite, "position", _sprite_base_position,
-		maxf(step_duration * return_mult, 0.01)).set_ease(Tween.EASE_OUT)
+
+	_hit_shake_tween.tween_property(
+		animated_sprite,
+		"position",
+		_sprite_base_position,
+		maxf(step_duration * return_mult, 0.01)
+	).set_ease(Tween.EASE_OUT)
 
 
 func _flash_damage() -> void:
@@ -442,16 +744,18 @@ func _flash_block() -> void:
 	_flash(block_flash_color, block_flash_in_duration, block_flash_out_duration)
 
 
-func _flash(color: Color, in_dur: float, out_dur: float) -> void:
+func _flash(color: Color, in_duration: float, out_duration: float) -> void:
 	if not animated_sprite or _state == State.DEAD:
 		return
+
 	_kill_tween(_flash_tween)
+
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(animated_sprite, "modulate", color, in_dur)
-	_flash_tween.tween_property(animated_sprite, "modulate", Color.WHITE, out_dur)
+	_flash_tween.tween_property(animated_sprite, "modulate", color, in_duration)
+	_flash_tween.tween_property(animated_sprite, "modulate", Color.WHITE, out_duration)
 
 
-# ── internal: блок ──
+# ── block ──
 
 func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	if _state == State.DEAD:
@@ -465,25 +769,61 @@ func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) ->
 		await get_tree().create_timer(lead).timeout
 		if _state == State.DEAD:
 			return
+
 	_play_anim(ANIM_BLOCK)
 
 	var rest := total - lead
+
 	if rest > 0.0:
 		await get_tree().create_timer(rest).timeout
 		if _state == State.DEAD:
 			return
 
-	hit_blocked.emit(amount)
+	hit_blocked.emit()
 	_flash_block()
 	_play_hit_shake(from_position, block_shake_distance, HitShakePreset.BLOCK_HIT)
+	_play_block_recoil(from_position)
+
+
+func _play_block_recoil(from_position: Vector2) -> void:
+	if not animated_sprite or block_recoil_distance <= 0.0:
+		return
+
+	var dir := Vector2.UP
+
+	if from_position != Vector2.INF:
+		var delta := global_position - from_position
+		if delta.length_squared() > 0.0001:
+			dir = delta.normalized()
+
+	_kill_tween(_recoil_tween)
+
+	_recoil_tween = create_tween()
+	_recoil_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	_recoil_tween.tween_property(
+		animated_sprite,
+		"position",
+		_sprite_base_position + dir * block_recoil_distance,
+		0.05
+	)
+
+	_recoil_tween.tween_property(
+		animated_sprite,
+		"position",
+		_sprite_base_position,
+		0.12
+	)
 
 
 func _get_anim_frame_time(anim: StringName, frame: int) -> float:
 	if not _has_anim(anim) or frame <= 0:
 		return 0.0
+
 	var speed := animated_sprite.sprite_frames.get_animation_speed(anim)
 	if speed <= 0.0:
 		return 0.0
+
 	return float(frame) / speed
 
 
@@ -493,47 +833,74 @@ func _on_blocked_hit(amount: float, from_position: Vector2) -> void:
 	_block_absorbed += amount - leaked
 
 	await play_block_reaction(amount, from_position)
+
 	if _state == State.DEAD:
 		return
+
 	if leaked > 0.0:
 		_apply_damage(leaked, false)
+
 	_after_block_hit()
 
 
-# ── internal: смертельный отлёт и труп ──
+# ── death movement ──
 
 func _start_death_knockback() -> void:
 	var from := _last_hit_from
+
 	if from == Vector2.INF:
 		from = global_position + Vector2.DOWN
+
 	var base_dir := global_position - from
+
 	if base_dir.length_squared() < 0.0001:
 		base_dir = Vector2.UP
+
 	base_dir = base_dir.normalized()
 
 	var land := _find_corpse_landing(base_dir)
 	_corpse_landing_pos = land
 
-	# Пока летим — выше всех (в т.ч. выше атакующих).
 	z_index = death_flying_z
 
-	# Скорость фиксирована → длительность зависит только от дистанции.
 	var dist := global_position.distance_to(land)
 	var speed := maxf(death_knockback_speed, 1.0)
 	var fly_duration := maxf(dist / speed, min_phase_duration)
 
-	var pt := create_tween()
-	pt.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	pt.tween_property(self, "global_position", land, fly_duration)
+	_play_hit_stop(maxf(hit_stop_duration * 1.5, 0.08))
+
+	var knockback := create_tween()
+	knockback.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	knockback.tween_property(self, "global_position", land, fly_duration)
+
+	_play_death_arc(fly_duration)
 
 	if not death_disappear:
-		# Сбрасываем z только когда и отлёт, и анимация смерти завершены.
-		_drop_z_when_death_settled(pt)
+		_drop_z_when_death_settled(knockback)
 
 
-## Дожидается окончания отлёта И хотя бы одного полного цикла анимации
-## смерти — и только затем опускает труп под живых (death_corpse_z).
-## Вызывается без await из _start_death_knockback: fire-and-forget корутина.
+func _play_death_arc(fly_duration: float) -> void:
+	if not animated_sprite or death_arc_height <= 0.0:
+		return
+
+	var arc := create_tween()
+	arc.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	arc.tween_property(
+		animated_sprite,
+		"position",
+		_sprite_base_position + Vector2(0.0, -death_arc_height),
+		fly_duration * 0.4
+	)
+
+	arc.tween_property(
+		animated_sprite,
+		"position",
+		_sprite_base_position,
+		fly_duration * 0.6
+	)
+
+
 func _drop_z_when_death_settled(knockback_tween: Tween) -> void:
 	if knockback_tween and knockback_tween.is_valid() and knockback_tween.is_running():
 		await knockback_tween.finished
@@ -546,64 +913,69 @@ func _drop_z_when_death_settled(knockback_tween: Tween) -> void:
 	if _state == State.DEAD:
 		z_index = _compute_corpse_z()
 
+
 func _compute_corpse_z() -> int:
 	if death_corpse_z_sort_span <= 0:
 		return death_corpse_z
 
-	var yr := _resolve_corpse_sort_y_range()
-	if yr.y <= yr.x:
+	var y_range := _resolve_corpse_sort_y_range()
+
+	if y_range.y <= y_range.x:
 		return death_corpse_z
 
-	var t := clampf(inverse_lerp(yr.x, yr.y, _corpse_landing_pos.y), 0.0, 1.0)
-	# t=0 (верх экрана, дальше от камеры)  → death_corpse_z - span
-	# t=1 (низ экрана, ближе к камере)     → death_corpse_z
+	var t := clampf(
+		inverse_lerp(y_range.x, y_range.y, _corpse_landing_pos.y),
+		0.0,
+		1.0
+	)
+
 	var z := death_corpse_z - int(round((1.0 - t) * float(death_corpse_z_sort_span)))
 	return maxi(z, -4096)
 
 
-## Y-диапазон для сортировки трупов.
-## Приоритет: death_corpse_sort_y_range → death_landing_bounds → viewport.
 func _resolve_corpse_sort_y_range() -> Vector2:
 	if death_corpse_sort_y_range.y > death_corpse_sort_y_range.x:
 		return death_corpse_sort_y_range
-	var b := _resolve_landing_bounds()
-	if b.size.y > 0.0:
-		return Vector2(b.position.y, b.end.y)
+
+	var bounds := _resolve_landing_bounds()
+
+	if bounds.size.y > 0.0:
+		return Vector2(bounds.position.y, bounds.end.y)
+
 	return Vector2.ZERO
 
-## Ждёт, пока анимация смерти дойдёт до последнего кадра.
-## - Не зацикленная: доходит до последнего кадра и останавливается.
-## - Зацикленная: ждёт, пока последний кадр мелькнёт в текущем цикле
-##   (иначе animation_finished не придёт и мы зависли бы до конца жизни объекта).
-## - Анимации нет / уже на последнем кадре: возвращается сразу.
+
 func _await_death_anim_last_frame() -> void:
 	if not _has_anim(ANIM_DEATH):
 		return
+
 	if not animated_sprite or animated_sprite.animation != ANIM_DEATH:
 		return
 
-	var sf := animated_sprite.sprite_frames
-	var last_frame := maxi(sf.get_frame_count(ANIM_DEATH) - 1, 0)
+	var sprite_frames := animated_sprite.sprite_frames
+	var last_frame := maxi(sprite_frames.get_frame_count(ANIM_DEATH) - 1, 0)
 
-	# Уже на последнем кадре (или дальше) — ждать нечего.
 	if animated_sprite.frame >= last_frame:
 		return
 
 	var elapsed := 0.0
+
 	while animated_sprite.animation == ANIM_DEATH and animated_sprite.is_playing():
 		if animated_sprite.frame >= last_frame:
 			return
+
 		await animated_sprite.frame_changed
+
 		elapsed += get_process_delta_time()
+
 		if elapsed > ANIM_WAIT_TIMEOUT:
-			push_warning("Death anim не дошла до последнего кадра за %.1fs на %s" % [ANIM_WAIT_TIMEOUT, name])
+			push_warning(
+				"Death anim не дошла до последнего кадра за %.1fs на %s"
+				% [ANIM_WAIT_TIMEOUT, name]
+			)
 			return
 
 
-## Ищет точку приземления в конусе `death_knockback_angle_jitter` вокруг `base_dir`.
-## Возвращает первую, которая дальше `death_min_corpse_distance` от всех уже
-## лежащих трупов. Если все заняты — лучшую из найденных (максимальная дистанция
-## до ближайшего трупа).
 func _find_corpse_landing(base_dir: Vector2) -> Vector2:
 	var corpses := get_tree().get_nodes_in_group(CORPSE_GROUP)
 	var bounds := _resolve_landing_bounds()
@@ -613,48 +985,73 @@ func _find_corpse_landing(base_dir: Vector2) -> Vector2:
 
 	for _attempt in death_landing_attempts:
 		var angle := 0.0
+
 		if death_knockback_angle_jitter > 0.0:
-			angle = randf_range(-death_knockback_angle_jitter, death_knockback_angle_jitter)
+			angle = randf_range(
+				-death_knockback_angle_jitter,
+				death_knockback_angle_jitter
+			)
 
 		var dist := death_knockback_distance
+
 		if death_knockback_distance_jitter > 0.0:
-			dist *= randf_range(1.0 - death_knockback_distance_jitter, 1.0 + death_knockback_distance_jitter)
+			dist *= randf_range(
+				1.0 - death_knockback_distance_jitter,
+				1.0 + death_knockback_distance_jitter
+			)
 
-		var cand := global_position + base_dir.rotated(angle) * dist
+		var candidate := global_position + base_dir.rotated(angle) * dist
+
 		if bounds.size != Vector2.ZERO:
-			cand = _clamp_to_rect(cand, bounds)
+			candidate = _clamp_to_rect(candidate, bounds)
 
-		var min_dist := _min_dist_to_corpses(cand, corpses)
+		var min_dist := _min_dist_to_corpses(candidate, corpses)
+
 		if min_dist >= death_min_corpse_distance:
-			return cand
+			return candidate
+
 		if min_dist > best_min_dist:
 			best_min_dist = min_dist
-			best = cand
+			best = candidate
 
 	return best
 
 
 func _min_dist_to_corpses(pos: Vector2, corpses: Array) -> float:
-	var min_d := INF
-	for c in corpses:
-		if c == self or not is_instance_valid(c):
+	var min_dist := INF
+
+	for corpse in corpses:
+		if corpse == self or not is_instance_valid(corpse):
 			continue
-		var c_pos: Vector2 = c.get_corpse_anchor() if c.has_method("get_corpse_anchor") else c.global_position
-		min_d = minf(min_d, pos.distance_to(c_pos))
-	return min_d
+
+		var corpse_pos: Vector2 = corpse.global_position
+
+		if corpse.has_method("get_corpse_anchor"):
+			corpse_pos = corpse.get_corpse_anchor()
+
+		min_dist = minf(min_dist, pos.distance_to(corpse_pos))
+
+	return min_dist
 
 
 func _resolve_landing_bounds() -> Rect2:
 	if death_landing_bounds.size != Vector2.ZERO:
 		return death_landing_bounds
-	var vp := get_viewport()
-	if vp == null:
+
+	var viewport := get_viewport()
+	if viewport == null:
 		return Rect2()
-	var r := vp.get_visible_rect()
+
+	var visible_rect := viewport.get_visible_rect()
 	var pad := death_landing_viewport_pad
-	var inner := Rect2(r.position + pad, r.size - pad * 2.0)
+	var inner := Rect2(
+		visible_rect.position + pad,
+		visible_rect.size - pad * 2.0
+	)
+
 	if inner.size.x <= 0.0 or inner.size.y <= 0.0:
 		return Rect2()
+
 	return inner
 
 
@@ -669,66 +1066,97 @@ func _start_death_fade() -> void:
 	if not death_disappear and is_equal_approx(death_corpse_alpha, 1.0):
 		return
 
-	var ft := create_tween()
+	var fade := create_tween()
+
 	if death_fade_delay > 0.0:
-		ft.tween_interval(death_fade_delay)
+		fade.tween_interval(death_fade_delay)
 
 	if death_disappear:
-		ft.tween_property(self, "modulate:a", 0.0, maxf(death_fade_duration, 0.01))
-		ft.tween_callback(queue_free)
+		fade.tween_property(self, "modulate:a", 0.0, maxf(death_fade_duration, 0.01))
+		fade.tween_callback(queue_free)
 	elif death_fade_duration > 0.0:
-		ft.tween_property(self, "modulate:a", death_corpse_alpha, death_fade_duration)
+		fade.tween_property(self, "modulate:a", death_corpse_alpha, death_fade_duration)
 	else:
 		modulate.a = death_corpse_alpha
 
 
-# ── internal: анимации ──
+# ── animation helpers ──
 
 func _play_anim(anim: StringName) -> void:
 	if not _has_anim(anim):
 		return
+
 	if animated_sprite.animation == anim and animated_sprite.is_playing():
 		return
+
 	animated_sprite.play(anim)
 
 
 func _has_anim(anim: StringName) -> bool:
-	return animated_sprite != null and animated_sprite.sprite_frames != null \
+	return (
+		animated_sprite != null
+		and animated_sprite.sprite_frames != null
 		and animated_sprite.sprite_frames.has_animation(anim)
+	)
 
 
 func _await_anim_end(anim: StringName, id: int) -> void:
 	if not _has_anim(anim):
 		return
+
 	var elapsed := 0.0
-	while id == _action_id and animated_sprite.animation == anim and animated_sprite.is_playing():
+
+	while id == _action_id \
+			and animated_sprite.animation == anim \
+			and animated_sprite.is_playing():
 		await get_tree().process_frame
+
 		elapsed += get_process_delta_time()
+
 		if elapsed > ANIM_WAIT_TIMEOUT:
-			push_warning("Anim '%s' не завершилась за %.1fs на %s (looped?)" % [anim, ANIM_WAIT_TIMEOUT, name])
+			push_warning(
+				"Anim '%s' не завершилась за %.1fs на %s (looped?)"
+				% [anim, ANIM_WAIT_TIMEOUT, name]
+			)
+
 			if animated_sprite:
 				animated_sprite.stop()
+
 			return
 
 
 func _await_anim_frame(anim: StringName, frame: int, id: int) -> void:
 	if not _has_anim(anim) or frame <= 0:
 		return
-	var target_frame := clampi(frame, 0, maxi(animated_sprite.sprite_frames.get_frame_count(anim) - 1, 0))
+
+	var frame_count := animated_sprite.sprite_frames.get_frame_count(anim)
+	var target_frame := clampi(frame, 0, maxi(frame_count - 1, 0))
+
 	var elapsed := 0.0
-	while id == _action_id and animated_sprite.animation == anim and animated_sprite.is_playing():
+
+	while id == _action_id \
+			and animated_sprite.animation == anim \
+			and animated_sprite.is_playing():
 		if animated_sprite.frame >= target_frame:
 			return
+
 		await animated_sprite.frame_changed
+
 		elapsed += get_process_delta_time()
+
 		if elapsed > ANIM_WAIT_TIMEOUT:
-			push_warning("Anim '%s' не достигла кадра %d за %.1fs на %s" % [anim, target_frame, ANIM_WAIT_TIMEOUT, name])
+			push_warning(
+				"Anim '%s' не достигла кадра %d за %.1fs на %s"
+				% [anim, target_frame, ANIM_WAIT_TIMEOUT, name]
+			)
+
 			if animated_sprite:
 				animated_sprite.stop()
+
 			return
 
 
-# ── internal: UI ──
+# ── UI helpers ──
 
 func _init_bar(bar: HealthBar, value: float, max_value: float) -> void:
 	if bar:
@@ -740,7 +1168,7 @@ func _sync_bar(bar: HealthBar, value: float, max_value: float) -> void:
 		bar.update_value(value, max_value)
 
 
-# ── internal: helpers ──
+# ── generic helpers ──
 
 func _kill_tween(tw: Tween) -> void:
 	if tw and tw.is_valid():
