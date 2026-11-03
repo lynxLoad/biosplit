@@ -5,8 +5,6 @@
 [ext_resource type="Texture2D" uid="uid://bqow00exlgrh8" path="res://assets/sprites/Back_04.png" id="3_elpcd"]
 [ext_resource type="Texture2D" uid="uid://cetn7xkt6b7bw" path="res://assets/sprites/Back_02.png" id="4_ld8sx"]
 [ext_resource type="PackedScene" uid="uid://b518ysonl8xuh" path="res://game/arena/battle_manager.tscn" id="5_8eybb"]
-[ext_resource type="PackedScene" uid="uid://cimp7lob5mx6a" path="res://game/character/subnodes/player/player.tscn" id="6_ld8sx"]
-[ext_resource type="PackedScene" uid="uid://djqbckuyej0ip" path="res://game/character/subnodes/enemy/enemy.tscn" id="7_ltahe"]
 
 [sub_resource type="GDScript" id="GDScript_mnys6"]
 resource_name = "battle_camera"
@@ -184,13 +182,11 @@ region_rect = Rect2(0, 0, 100000, 184)
 position = Vector2(480, 270)
 zoom = Vector2(1.001, 1.001)
 script = SubResource("GDScript_mnys6")
-shake_scale = 0.6
+shake_scale = 0.8
 shake_decay = 10.0
 shake_frequency = 30.0
 
 [node name="BattleManager" parent="." unique_id=429190078 instance=ExtResource("5_8eybb")]
-player_scene = ExtResource("6_ld8sx")
-enemy_scene = ExtResource("7_ltahe")
 player_spawn = Vector2(330, 340)
 enemy_spawns = Array[Vector2]([Vector2(570, 340), Vector2(720, 305), Vector2(820, 355)])
 reflow_duration = 0.2
