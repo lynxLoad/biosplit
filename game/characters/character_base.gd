@@ -31,7 +31,7 @@ const HIT_SHAKE_PRESETS := {
 	HitShakePreset.BLOCK_HIT: {"distance": 6.0,  "duration": 0.20, "oscillations": 5, "decay": 0.60, "return_mult": 1.3},
 }
 
-@export var hit_shake_preset: HitShakePreset = HitShakePreset.MEDIUM
+@export var hit_shake_preset: HitShakePreset = HitShakePreset.JAB
 @export_range(0.0, 0.5) var hit_shake_distance_jitter: float = 0.1
 @export_range(0.0, 0.5) var hit_shake_duration_jitter: float = 0.0
 @export_range(0.0, 0.5) var hit_shake_decay_jitter: float = 0.0
@@ -53,21 +53,21 @@ const HIT_SHAKE_PRESETS := {
 
 ## Базовая дистанция отлёта при смерти.
 @export var death_knockback_distance: float = 120.0
-@export var death_knockback_duration: float = 0.45
+@export var death_knockback_speed: float = 500.0
 
 ## Разброс направления, ± радианы. 0.25 ≈ ±14° — траектория читается
 ## как "улетел от удара", но трупы не слипаются в одну точку.
 @export var death_knockback_angle_jitter: float = 0.2
 
 ## Разброс дистанции, ± доля. 0.3 → от 70% до 130%.
-@export var death_knockback_distance_jitter: float = 0.5
+@export var death_knockback_distance_jitter: float = 0.3
 
 ## Минимальное расстояние между центрами трупов.
 ## Гарантия, что игрок сможет подойти к каждому для лута.
 @export var death_min_corpse_distance: float = 150.0
 
 ## Сколько вариантов перебрать, чтобы найти свободное место.
-@export_range(1, 40) var death_landing_attempts: int = 20
+@export_range(1, 40) var death_landing_attempts: int = 40
 
 ## Ограничение арены. Если size == 0 — берётся видимая область вьюпорта
 ## с отступом death_landing_viewport_pad.
@@ -87,6 +87,8 @@ const HIT_SHAKE_PRESETS := {
 
 ## z_index после приземления. Опускает труп под живых.
 @export var death_corpse_z: int = -1
+@export_range(0, 4096) var death_corpse_z_sort_span: int = 1500
+@export var death_corpse_sort_y_range: Vector2 = Vector2.ZERO
 
 @export var death_fade_duration: float = 0.5
 @export var death_fade_delay: float = 0.0
@@ -241,7 +243,7 @@ func attack(enemy: CharacterBase) -> void:
 func block() -> void:
 	if _state not in [State.IDLE, State.MOVING_TO_IDLE]:
 		return
-	_cancel_active_tween()
+	_begin_action()
 	_state = State.BLOCKING
 	_block_absorbed = 0.0
 	if _has_anim(ANIM_BLOCK):
@@ -514,9 +516,14 @@ func _start_death_knockback() -> void:
 	# Пока летим — выше всех (в т.ч. выше атакующих).
 	z_index = death_flying_z
 
+	# Скорость фиксирована → длительность зависит только от дистанции.
+	var dist := global_position.distance_to(land)
+	var speed := maxf(death_knockback_speed, 1.0)
+	var fly_duration := maxf(dist / speed, min_phase_duration)
+
 	var pt := create_tween()
 	pt.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	pt.tween_property(self, "global_position", land, maxf(death_knockback_duration, 0.01))
+	pt.tween_property(self, "global_position", land, fly_duration)
 
 	if not death_disappear:
 		# Сбрасываем z только когда и отлёт, и анимация смерти завершены.
@@ -533,31 +540,63 @@ func _drop_z_when_death_settled(knockback_tween: Tween) -> void:
 	if _state != State.DEAD:
 		return
 
-	await _await_death_anim_cycle()
+	await _await_death_anim_last_frame()
 
 	if _state == State.DEAD:
-		z_index = death_corpse_z
+		z_index = _compute_corpse_z()
+
+func _compute_corpse_z() -> int:
+	if death_corpse_z_sort_span <= 0:
+		return death_corpse_z
+
+	var yr := _resolve_corpse_sort_y_range()
+	if yr.y <= yr.x:
+		return death_corpse_z
+
+	var t := clampf(inverse_lerp(yr.x, yr.y, _corpse_landing_pos.y), 0.0, 1.0)
+	# t=0 (верх экрана, дальше от камеры)  → death_corpse_z - span
+	# t=1 (низ экрана, ближе к камере)     → death_corpse_z
+	var z := death_corpse_z - int(round((1.0 - t) * float(death_corpse_z_sort_span)))
+	return maxi(z, -4096)
 
 
-## Ждёт один цикл анимации смерти.
-## - Не зацикленная: ждёт сигнал animation_finished.
-## - Зацикленная: ждёт длительность одного цикла (иначе animation_finished
-##   не придёт и мы зависли бы до конца жизни объекта).
-## - Анимации нет / уже не играет: возвращается сразу.
-func _await_death_anim_cycle() -> void:
+## Y-диапазон для сортировки трупов.
+## Приоритет: death_corpse_sort_y_range → death_landing_bounds → viewport.
+func _resolve_corpse_sort_y_range() -> Vector2:
+	if death_corpse_sort_y_range.y > death_corpse_sort_y_range.x:
+		return death_corpse_sort_y_range
+	var b := _resolve_landing_bounds()
+	if b.size.y > 0.0:
+		return Vector2(b.position.y, b.end.y)
+	return Vector2.ZERO
+
+## Ждёт, пока анимация смерти дойдёт до последнего кадра.
+## - Не зацикленная: доходит до последнего кадра и останавливается.
+## - Зацикленная: ждёт, пока последний кадр мелькнёт в текущем цикле
+##   (иначе animation_finished не придёт и мы зависли бы до конца жизни объекта).
+## - Анимации нет / уже на последнем кадре: возвращается сразу.
+func _await_death_anim_last_frame() -> void:
 	if not _has_anim(ANIM_DEATH):
 		return
 	if not animated_sprite or animated_sprite.animation != ANIM_DEATH:
 		return
 
 	var sf := animated_sprite.sprite_frames
-	if sf.get_animation_loop(ANIM_DEATH):
-		var speed := maxf(sf.get_animation_speed(ANIM_DEATH), 0.01)
-		var count := maxi(sf.get_frame_count(ANIM_DEATH), 1)
-		await get_tree().create_timer(float(count) / speed).timeout
-	else:
-		if animated_sprite.is_playing():
-			await animated_sprite.animation_finished
+	var last_frame := maxi(sf.get_frame_count(ANIM_DEATH) - 1, 0)
+
+	# Уже на последнем кадре (или дальше) — ждать нечего.
+	if animated_sprite.frame >= last_frame:
+		return
+
+	var elapsed := 0.0
+	while animated_sprite.animation == ANIM_DEATH and animated_sprite.is_playing():
+		if animated_sprite.frame >= last_frame:
+			return
+		await animated_sprite.frame_changed
+		elapsed += get_process_delta_time()
+		if elapsed > ANIM_WAIT_TIMEOUT:
+			push_warning("Death anim не дошла до последнего кадра за %.1fs на %s" % [ANIM_WAIT_TIMEOUT, name])
+			return
 
 
 ## Ищет точку приземления в конусе `death_knockback_angle_jitter` вокруг `base_dir`.
@@ -571,7 +610,7 @@ func _find_corpse_landing(base_dir: Vector2) -> Vector2:
 	var best := global_position + base_dir * death_knockback_distance
 	var best_min_dist := -1.0
 
-	for i in death_landing_attempts:
+	for _attempt in death_landing_attempts:
 		var angle := 0.0
 		if death_knockback_angle_jitter > 0.0:
 			angle = randf_range(-death_knockback_angle_jitter, death_knockback_angle_jitter)
@@ -645,9 +684,7 @@ func _start_death_fade() -> void:
 # ── internal: анимации ──
 
 func _play_anim(anim: StringName) -> void:
-	if not animated_sprite or not animated_sprite.sprite_frames:
-		return
-	if not animated_sprite.sprite_frames.has_animation(anim):
+	if not _has_anim(anim):
 		return
 	if animated_sprite.animation == anim and animated_sprite.is_playing():
 		return
