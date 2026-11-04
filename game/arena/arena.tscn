@@ -5,6 +5,12 @@
 [ext_resource type="Texture2D" uid="uid://bqow00exlgrh8" path="res://assets/sprites/Back_04.png" id="3_elpcd"]
 [ext_resource type="Texture2D" uid="uid://cetn7xkt6b7bw" path="res://assets/sprites/Back_02.png" id="4_ld8sx"]
 [ext_resource type="PackedScene" uid="uid://b518ysonl8xuh" path="res://game/arena/battle_manager.tscn" id="5_8eybb"]
+[ext_resource type="Texture2D" uid="uid://cq8ucgf1as6tu" path="res://assets/sprites/Btn_attack_01.png" id="6_5mt6i"]
+[ext_resource type="Texture2D" uid="uid://chrlgsnsjjb2f" path="res://assets/sprites/Вebuff_bar_01.png" id="6_ld8sx"]
+[ext_resource type="Texture2D" uid="uid://bdj0c5v2a0jei" path="res://assets/sprites/Btn_block_01.png" id="7_3kh18"]
+[ext_resource type="Texture2D" uid="uid://cu1wuhs4kkocv" path="res://assets/sprites/Вebuff_bar_02.png" id="7_ltahe"]
+[ext_resource type="Texture2D" uid="uid://dqad73eyr8t1c" path="res://assets/sprites/Btn_inventory_01.png" id="8_gbqjg"]
+[ext_resource type="Texture2D" uid="uid://cs3vvpca2ibyo" path="res://assets/sprites/Btn_uvorot_01.png" id="9_3sbi6"]
 
 [sub_resource type="GDScript" id="GDScript_mnys6"]
 resource_name = "battle_camera"
@@ -190,3 +196,37 @@ shake_frequency = 30.0
 player_spawn = Vector2(330, 340)
 enemy_spawns = Array[Vector2]([Vector2(570, 340), Vector2(720, 305), Vector2(820, 355)])
 reflow_duration = 0.2
+
+[node name="Hud" type="Control" parent="." unique_id=417985858]
+z_index = 4096
+layout_mode = 3
+anchors_preset = 0
+offset_right = 970.0
+offset_bottom = 541.0
+
+[node name="BtnAttack01" type="Sprite2D" parent="Hud" unique_id=871253390]
+position = Vector2(858, 440)
+texture = ExtResource("6_5mt6i")
+
+[node name="BtnBlock01" type="Sprite2D" parent="Hud" unique_id=1050965947]
+position = Vector2(118.5, 442.5)
+texture = ExtResource("7_3kh18")
+
+[node name="BtnInventory01" type="Sprite2D" parent="Hud" unique_id=1008177735]
+position = Vector2(199, 457)
+texture = ExtResource("8_gbqjg")
+
+[node name="BtnUvorot01" type="Sprite2D" parent="Hud" unique_id=594898829]
+position = Vector2(81.5, 379.5)
+texture = ExtResource("9_3sbi6")
+
+[node name="Вebuff_Bar01" type="Sprite2D" parent="Hud" unique_id=1223066605]
+texture_filter = 1
+position = Vector2(321, 354)
+texture = ExtResource("6_ld8sx")
+
+[node name="Вebuff_Bar02" type="Sprite2D" parent="Hud/Вebuff_Bar01" unique_id=1880819374]
+texture_filter = 1
+position = Vector2(-19, -2)
+texture = ExtResource("7_ltahe")
+offset = Vector2(30, 1.5)
