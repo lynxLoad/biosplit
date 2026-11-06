@@ -6,17 +6,18 @@
 [ext_resource type="Resource" uid="uid://fh4mivy3nv6u" path="res://assets/resources/weapons/w_knife.tres" id="3_65114"]
 
 [node name="Player" type="Node2D" unique_id=1115020173]
+z_index = 1
 script = ExtResource("1_5hw72")
+block_hitstop_duration = 0.0
 character_stats = ExtResource("2_mnys6")
 weapon = ExtResource("3_65114")
+z_attack_priority = 2500
 hit_shake_preset = 1
-hit_shake_distance_jitter = 0.3
-hit_shake_duration_jitter = 0.159
-hit_shake_decay_jitter = 0.126
-hit_stop_duration = 0.25
+hit_shake_distance_jitter = 0.0
+hit_stop_duration = 0.1
 attack_impact_speed = 1.0
 attack_recoil_distance = 3.0
-block_shake_distance = 10.0
+block_shake_distance = 12.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=356963692]
 z_index = 1

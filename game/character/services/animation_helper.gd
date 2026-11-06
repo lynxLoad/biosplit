@@ -67,3 +67,9 @@ func await_frame(anim: StringName, frame: int, ctx: ActionContext, id: int) -> v
 			if is_instance_valid(_sprite):
 				_sprite.stop()
 			return
+
+func restart(anim: StringName) -> void:
+	if not has(anim):
+		return
+	_sprite.stop()
+	_sprite.play(anim)

@@ -27,7 +27,7 @@ var _attack_target: Character
 
 func _ready() -> void:
 	super()
-	_init_bar(health_bar, get_health(), get_max_health())
+	init_bar(health_bar, get_health(), get_max_health())
 	add_to_group(ENEMY_GROUP)
 	if _attack_frames.is_empty():
 		_attack_frames = { &"attack": 0 }
@@ -83,7 +83,7 @@ func _any_enemy_attacking() -> bool:
 
 func heal(amount: float) -> void:
 	super.heal(amount)
-	_sync_bar(health_bar, get_health(), get_max_health())
+	sync_bar(health_bar, get_health(), get_max_health())
 
 
 func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
@@ -132,8 +132,10 @@ func _return_to_idle_after_block() -> void:
 
 func _apply_damage(amount: float, flash: bool = true) -> void:
 	super(amount, flash)
-	_sync_bar(health_bar, get_health(), get_max_health())
+	sync_bar(health_bar, get_health(), get_max_health())
 
+func _die() -> void:
+	super()
 
 func _hide_ui_on_death() -> void:
 	if health_bar:

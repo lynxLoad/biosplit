@@ -6,8 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://cetn7xkt6b7bw" path="res://assets/sprites/Back_02.png" id="4_ld8sx"]
 [ext_resource type="PackedScene" uid="uid://b518ysonl8xuh" path="res://game/arena/battle_manager.tscn" id="5_8eybb"]
 
-[sub_resource type="GDScript" id="GDScript_mnys6"]
-resource_name = "battle_camera"
+[sub_resource type="GDScript" id="GDScript_8eybb"]
 script/source = "extends Camera2D
 
 ## В эту группу игрок должен быть добавлен (add_to_group(\"player\")).
@@ -181,10 +180,7 @@ region_rect = Rect2(0, 0, 100000, 184)
 [node name="BattleCamera" type="Camera2D" parent="." unique_id=746185389]
 position = Vector2(480, 270)
 zoom = Vector2(1.001, 1.001)
-script = SubResource("GDScript_mnys6")
-shake_scale = 0.8
-shake_decay = 10.0
-shake_frequency = 30.0
+script = SubResource("GDScript_8eybb")
 
 [node name="BattleManager" parent="." unique_id=429190078 instance=ExtResource("5_8eybb")]
 player_spawn = Vector2(330, 340)

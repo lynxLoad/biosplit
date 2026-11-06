@@ -59,7 +59,7 @@ const ANIM_BLOCK := &"block"
 @export var block_flash_out_duration: float = 0.12
 
 @export_group("Juice")
-@export_range(0.0, 0.25) var hit_stop_duration: float = 0.06
+@export_range(0.0, 1.0) var hit_stop_duration: float = 0.06
 @export_range(0.1, 1.0) var attack_anticipation_speed: float = 0.45
 @export_range(1.0, 4.0) var attack_impact_speed: float = 2.0
 @export_range(0, 5) var attack_anticipation_frames: int = 2
@@ -82,6 +82,9 @@ const ANIM_BLOCK := &"block"
 @export_range(1, 40) var death_landing_attempts: int = 40
 @export var death_landing_bounds: Rect2 = Rect2()
 @export var death_landing_viewport_pad: Vector2 = Vector2(60.0, 60.0)
+@export_subgroup("Death Hit Stop")
+## Хит-стоп при добивающем ударе. 0 — выключен.
+@export_range(0.0, 1.0) var death_hit_stop_duration: float = 0.0
 
 @export_subgroup("Corpse")
 @export var death_disappear: bool = false
@@ -166,7 +169,7 @@ func _setup_services() -> void:
 	}
 
 	_hit_stop = HitStopService.new()
-	_hit_stop.setup(self, animated_sprite)
+	_hit_stop.setup(self)
 
 	_move = MovementService.new()
 	_move.setup(self, _ctx)
@@ -502,6 +505,8 @@ func _apply_damage(amount: float, flash: bool = true) -> void:
 	damaged.emit(amount)
 
 	if _health.is_dead():
+		# Финальный удар: хит-стоп, потом смерть.
+		_hit_stop.play(death_hit_stop_duration)
 		_die()
 		return
 
@@ -576,11 +581,11 @@ func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) ->
 		return
 	await _block.play_reaction(from_position, func() -> void: hit_blocked.emit(amount))
 
-func _init_bar(bar: HealthBar, value: float, max_value: float) -> void:
+func init_bar(bar: HealthBar, value: float, max_value: float) -> void:
 	if bar:
 		bar.setup(value, max_value)
 
 
-func _sync_bar(bar: HealthBar, value: float, max_value: float) -> void:
+func sync_bar(bar: HealthBar, value: float, max_value: float) -> void:
 	if bar:
 		bar.update_value(value, max_value)

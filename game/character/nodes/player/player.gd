@@ -5,6 +5,10 @@ signal screen_shake_requested(intensity: float, duration: float)
 
 const PLAYER_GROUP := &"player"
 
+@export_group("Block Feedback")
+## Глобальный freeze-frame при успешном блоке. 0 = выключен.
+@export var block_hitstop_duration: float = 0.06
+
 var enemies: Array[Character] = []
 
 var _attack_locked: bool = false
@@ -22,6 +26,16 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if Input.is_action_just_pressed(&"attack"):
+		_try_attack()
+	if Input.is_action_just_pressed(&"block"):
+		_block_held = true
+		_try_block()
+	elif Input.is_action_just_released(&"block"):
+		_block_held = false
+		if _state == State.BLOCKING:
+			unblock()
+	
 	_maybe_enter_queued_block()
 
 
@@ -44,18 +58,6 @@ func set_attack_locked(value: bool) -> void:
 	_attack_locked = value
 	if was_locked and not value:
 		_maybe_enter_queued_block()
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"attack"):
-		_try_attack()
-	elif event.is_action_pressed(&"block"):
-		_block_held = true
-		_try_block()
-	elif event.is_action_released(&"block"):
-		_block_held = false
-		if _state == State.BLOCKING:
-			unblock()
 
 
 func _try_attack() -> void:

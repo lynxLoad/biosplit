@@ -10,7 +10,7 @@ var _hit_shake: HitShakeService
 var _juice: CombatJuice
 var _get_damage_pick: Callable
 var _is_dead: Callable
-
+ 
 # state
 var absorbed: float = 0.0
 
