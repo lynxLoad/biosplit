@@ -1,4 +1,4 @@
-extends Character
+extends CharacterBase
 class_name Enemy
 
 @onready var health_bar: HealthBar = $HealthBar
@@ -22,89 +22,78 @@ var _reactive_pending: bool = false
 # ── скрытая энергия атаки ──
 var _attack_energy: float = randf_range(50, 65)
 var _is_front: bool = false
-var _attack_target: Character
-
+var _attack_target: CharacterBase
 
 func _ready() -> void:
 	super()
-	init_bar(health_bar, get_health(), get_max_health())
+	_init_bar(health_bar, health, character_stats.max_health)
 	add_to_group(ENEMY_GROUP)
 	if _attack_frames.is_empty():
 		_attack_frames = { &"attack": 0 }
 
-
 # ── энергия атаки ──
 
-func set_attack_target(t: Character) -> void:
+## Кого бить. Ставит BattleManager при спавне.
+func set_attack_target(t: CharacterBase) -> void:
 	_attack_target = t
 
-
+## Флаг «первый стоящий». Ставит BattleManager из _apply_z_order.
 func set_is_front(value: bool) -> void:
 	_is_front = value
-
 
 func get_attack_energy() -> float:
 	return _attack_energy
 
-
 func _process(delta: float) -> void:
-	if _state == State.DEAD:
+	if _state == State.DEAD or is_busy():
 		return
-	if is_busy():
-		return
-	if _attack_target == null or not is_instance_valid(_attack_target) or _attack_target.is_dead():
+	if not _has_valid_target():
 		return
 
 	var rate := energy_rate_front if _is_front else energy_rate_others
 	_attack_energy = minf(_attack_energy + rate * delta, attack_energy_threshold)
-
 	if _attack_energy < attack_energy_threshold:
 		return
 
-	if _attack_target.is_attacking():
-		return
-	if _any_enemy_attacking():
+	# Пока игрок атакует — не бьём, но заряд сохраняем.
+	if _attack_target.is_attacking() or _any_enemy_attacking():
 		return
 
 	_attack_energy = 0.0
 	attack(_attack_target)
 
+func _has_valid_target() -> bool:
+	return _attack_target != null and is_instance_valid(_attack_target) and not _attack_target.is_dead()
 
 func _any_enemy_attacking() -> bool:
 	for other in get_tree().get_nodes_in_group(ENEMY_GROUP):
-		if other == self or not is_instance_valid(other):
-			continue
-		if other.is_attacking():
+		if other != self and is_instance_valid(other) and other.is_attacking():
 			return true
 	return false
-
 
 # ── урон / хил ──
 
 func heal(amount: float) -> void:
-	super.heal(amount)
-	sync_bar(health_bar, get_health(), get_max_health())
-
+	super(amount)
+	_sync_bar(health_bar, health, character_stats.max_health)
 
 func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	if _state == State.DEAD:
 		return
 
 	if _state == State.BLOCKING:
-		super.take_damage(amount, from_position)
+		super(amount, from_position)
 		return
 
 	if _state == State.IDLE and not _reactive_pending and randf() < character_stats.block_chance:
 		_reactive_block(amount, from_position)
 		return
 
-	super.take_damage(amount, from_position)
-
+	super(amount, from_position)
 
 func _reactive_block(amount: float, from_position: Vector2) -> void:
 	_reactive_pending = true
 	_last_hit_from = from_position
-
 	var leaked := maxf(0.0, amount - get_block_damage_reduction())
 
 	await play_block_reaction(amount, from_position)
@@ -117,25 +106,19 @@ func _reactive_block(amount: float, from_position: Vector2) -> void:
 	if _state != State.DEAD:
 		_schedule_return_to_idle()
 
-
 func _schedule_return_to_idle() -> void:
 	_kill_tween(_reactive_block_tween)
 	_reactive_block_tween = create_tween()
 	_reactive_block_tween.tween_interval(maxf(reactive_block_hold, reactive_block_min_hold))
 	_reactive_block_tween.tween_callback(_return_to_idle_after_block)
 
-
 func _return_to_idle_after_block() -> void:
 	if _state == State.IDLE and animated_sprite and animated_sprite.animation == ANIM_BLOCK:
 		_play_anim(ANIM_IDLE)
 
-
 func _apply_damage(amount: float, flash: bool = true) -> void:
 	super(amount, flash)
-	sync_bar(health_bar, get_health(), get_max_health())
-
-func _die() -> void:
-	super()
+	_sync_bar(health_bar, health, character_stats.max_health)
 
 func _hide_ui_on_death() -> void:
 	if health_bar:

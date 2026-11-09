@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b518ysonl8xuh"]
 
-[ext_resource type="PackedScene" uid="uid://cimp7lob5mx6a" path="res://game/character/nodes/player/player.tscn" id="1_s63d8"]
-[ext_resource type="PackedScene" uid="uid://djqbckuyej0ip" path="res://game/character/nodes/enemy/enemy.tscn" id="2_ycaqc"]
+[ext_resource type="PackedScene" uid="uid://cimp7lob5mx6a" path="res://game/characters/player/player.tscn" id="1_s63d8"]
+[ext_resource type="PackedScene" uid="uid://djqbckuyej0ip" path="res://game/characters/enemy/enemy.tscn" id="2_ycaqc"]
 
 [sub_resource type="GDScript" id="GDScript_0mjbs"]
 resource_name = "battle_manager"
@@ -36,7 +36,7 @@ script/source = "extends Node
 @onready var arena: Node2D = get_parent()
 
 var player: Player
-var enemies: Array[Character] = []
+var enemies: Array[CharacterBase] = []
 var _reflow_pending: bool = false
 var _spawned_count: int = 0
 var _reflow_serial: int = 0
@@ -68,9 +68,9 @@ func _spawn_all() -> void:
 	_apply_z_order()
 
 
-func _spawn_enemy_at(pos: Vector2, fade_in: bool) -> Character:
-	var e := enemy_scene.instantiate() as Character
-	assert(e != null, \"BattleManager: enemy_scene должен иметь корень Character\")
+func _spawn_enemy_at(pos: Vector2, fade_in: bool) -> CharacterBase:
+	var e := enemy_scene.instantiate() as CharacterBase
+	assert(e != null, \"BattleManager: enemy_scene должен иметь корень CharacterBase\")
 	arena.add_child(e)
 	e.global_position = pos
 	e.reset_idle_point()
@@ -84,7 +84,7 @@ func _spawn_enemy_at(pos: Vector2, fade_in: bool) -> Character:
 	return e
 
 
-func _start_fade_in(e: Character) -> void:
+func _start_fade_in(e: CharacterBase) -> void:
 	var final_alpha := e.modulate.a
 	e.modulate.a = 0.0
 	var tw := create_tween()
@@ -110,7 +110,7 @@ func _apply_z_order() -> void:
 		e.set_is_front(i == 0)
 
 
-func _on_enemy_died(enemy: Character) -> void:
+func _on_enemy_died(enemy: CharacterBase) -> void:
 	var idx := enemies.find(enemy)
 	if idx == -1:
 		return
