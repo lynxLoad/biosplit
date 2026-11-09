@@ -9,12 +9,12 @@ const DODGE_ANIM := &"dodge"
 # ── Dash afterimage (ghost trail) ──
 const GHOST_SPAWN_INTERVAL := 0.03
 const GHOST_FADE_TIME      := 0.25
-const GHOST_START_ALPHA    := 0.9
+const GHOST_START_ALPHA    := 0.7
 const GHOST_END_ALPHA      := 0.25
 const GHOST_SCALE_START    := 1.05
 const GHOST_SCALE_END      := 0.9
 const GHOST_SCALE_FADE     := 0.85
-const GHOST_COLOR_START    := Color(0.5, 0.7, 1.0)
+const GHOST_COLOR_START    := Color(0.0, 0.4, 1.0, 1.0)
 const GHOST_COLOR_END      := Color(1.0, 1.0, 1.0)
 
 @export var dodge_distance: float = 110.0
@@ -246,3 +246,6 @@ func _maybe_enter_queued_block() -> void:
 		return
 	if _state == State.IDLE:
 		block()
+
+func _get_post_hit_return_point() -> Vector2:
+	return idle_point

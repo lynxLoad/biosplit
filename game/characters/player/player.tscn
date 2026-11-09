@@ -7,6 +7,7 @@
 
 [node name="Player" type="Node2D" unique_id=1115020173]
 script = ExtResource("1_5hw72")
+dodge_duration = 0.15
 dodge_cooldown = 0.0
 character_stats = ExtResource("2_mnys6")
 weapon = ExtResource("3_65114")
@@ -18,7 +19,6 @@ hit_shake_preset = 1
 hit_shake_distance_jitter = 0.3
 hit_shake_duration_jitter = 0.159
 hit_shake_decay_jitter = 0.126
-block_shake_distance = 12.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=356963692]
 z_index = 1

@@ -322,8 +322,16 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	await _await_anim_end(damage_anim, id)
 	if id != _action_id:
 		return
+
 	_state = State.IDLE
 	_play_anim(ANIM_IDLE)
+
+	# Возврат на «строевую» позицию, если наследник её задал
+	# (например, Player после доджа, из которого его выбили).
+	var return_pt := _get_post_hit_return_point()
+	if return_pt != Vector2.INF and global_position.distance_to(return_pt) > 2.0:
+		var speed_px := maxf(character_stats.speed, 0.01) * pixels_per_unit
+		await _move_to(return_pt, speed_px, id)
 
 func move_to_idle_point(duration: float = 0.3) -> void:
 	if _state not in [State.IDLE, State.MOVING_TO_IDLE]:
@@ -388,6 +396,9 @@ func _on_dodged_hit(amount: float, from_position: Vector2) -> void:
 
 func _hide_ui_on_death() -> void:
 	pass
+
+func _get_post_hit_return_point() -> Vector2:
+	return Vector2.INF
 
 # ── action lifecycle ──
 
