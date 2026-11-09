@@ -39,7 +39,7 @@ func _ready() -> void:
 	if _attack_frames.is_empty():
 		_attack_frames = { &"attack_1": 0, &"attack_2": 0 }
 	if _attack_weights.is_empty():
-		_attack_weights = { &"attack_1": 1.75, &"attack_2": 1.0 }
+		_attack_weights = { &"attack_1": 2.0, &"attack_2": 1.0 }
 
 func _process(delta: float) -> void:
 	if Input.is_action_pressed(&"block"):

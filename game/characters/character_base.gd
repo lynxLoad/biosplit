@@ -35,84 +35,87 @@ const ANIM_BLOCK := &"block"
 const ANIM_WAIT_TIMEOUT := 3.0
 const CORPSE_GROUP := &"corpses"
 
-@export_range(0.0, 1.0) var block_anim_lead_ratio: float = 1.0
+# ── stats & weapon ──
+@export_group("Stats & Weapon")
 @export var character_stats: CharacterStats
 @export var weapon: Weapon
+
+# ── combat geometry ──
+@export_group("Combat Geometry")
 @export var strike_distance: float = 80.0
 @export var pixels_per_unit: float = 100.0
+
+# ── timing ──
+@export_group("Timing")
 @export var min_phase_duration: float = 0.08
 @export var max_phase_duration: float = 1.5
-@export var animation_frame_damage: int = 1
 
+# ── animations ──
+@export_group("Animations")
+@export var animation_frame_damage: int = 1
 @export var _attack_frames: Dictionary[StringName, int] = {}
 @export var _attack_weights: Dictionary[StringName, int] = {}
 
+# ── attack juice ──
+@export_group("Attack Juice")
+@export_range(0.1, 1.0) var attack_anticipation_speed: float = 0.45
+@export_range(1.0, 4.0) var attack_impact_speed: float = 2.0
+@export_range(0, 5) var attack_anticipation_frames: int = 2
+@export_range(0.0, 16.0) var attack_lunge_distance: float = 4.0
+@export_range(0.0, 16.0) var attack_recoil_distance: float = 5.0
+
+# ── hit shake ──
+@export_group("Hit Shake")
 @export var hit_shake_preset: HitShakePreset = HitShakePreset.JAB
 @export_range(0.0, 0.5) var hit_shake_distance_jitter: float = 0.1
 @export_range(0.0, 0.5) var hit_shake_duration_jitter: float = 0.0
 @export_range(0.0, 0.5) var hit_shake_decay_jitter: float = 0.0
 
+@export_subgroup("Custom Shake (используется только при preset = CUSTOM)")
 @export var hit_shake_distance: float = 14.0
 @export var hit_shake_duration: float = 0.3
 @export_range(0, 10) var hit_shake_oscillations: int = 7
 @export_range(0.0, 1.0) var hit_shake_decay: float = 0.65
 @export var hit_shake_return_mult: float = 1.5
 
+# ── hit flash ──
+@export_group("Hit Flash")
 @export var flash_color: Color = Color(1.0, 0.4, 0.4, 1.0)
 @export var flash_in_duration: float = 0.05
 @export var flash_out_duration: float = 0.1
 
+# ── block ──
+@export_group("Block")
+@export var block_max_absorbed_damage: float = 0.0
+@export var block_shake_distance: float = 6.0
+@export_range(0.0, 16.0) var block_recoil_distance: float = 4.0
+
+@export_subgroup("Block Flash")
 @export var block_flash_color: Color = Color(0.4, 0.65, 1.0, 1.0)
 @export var block_flash_in_duration: float = 0.03
 @export var block_flash_out_duration: float = 0.12
-@export var block_shake_distance: float = 6.0
-@export var block_max_absorbed_damage: float = 0.0
 
-# ── juice ──
-
-## Короткая пауза анимации в момент получения урона.
-@export_range(0.0, 0.25) var hit_stop_duration: float = 0.06
-
-## Замедление анимации непосредственно перед ударным кадром.
-@export_range(0.1, 1.0) var attack_anticipation_speed: float = 0.45
-
-## Ускорение анимации сразу после ударного кадра.
-@export_range(1.0, 4.0) var attack_impact_speed: float = 2.0
-
-## За сколько кадров до ударного кадра включать anticipation.
-@export_range(0, 5) var attack_anticipation_frames: int = 2
-
-## Микро-рывок корпуса вперёд в начале атаки.
-@export_range(0.0, 16.0) var attack_lunge_distance: float = 4.0
-
-## Отдача корпуса назад в момент удара.
-@export_range(0.0, 16.0) var attack_recoil_distance: float = 5.0
-
-## Отдача при успешном блоке.
-@export_range(0.0, 16.0) var block_recoil_distance: float = 4.0
-
-## Высота дуги смертельного отлёта.
-@export_range(0.0, 32.0) var death_arc_height: float = 8.0
-
-# ── death / corpse ──
-
+# ── death: knockback ──
+@export_group("Death Knockback")
 @export var death_knockback_distance: float = 120.0
 @export var death_knockback_speed: float = 500.0
 @export var death_knockback_angle_jitter: float = 0.2
 @export var death_knockback_distance_jitter: float = 0.3
+@export_range(0.0, 32.0) var death_arc_height: float = 8.0
+
+@export_group("Death Landing")
 @export var death_min_corpse_distance: float = 150.0
 @export_range(1, 40) var death_landing_attempts: int = 40
-
 @export var death_landing_bounds: Rect2 = Rect2()
 @export var death_landing_viewport_pad: Vector2 = Vector2(60.0, 60.0)
 
+@export_group("Death Corpse & Z")
 @export var death_disappear: bool = false
 @export_range(0.0, 1.0) var death_corpse_alpha: float = 1.0
 @export var death_flying_z: int = 2000
 @export var death_corpse_z: int = -1
 @export_range(0, 4096) var death_corpse_z_sort_span: int = 1500
 @export var death_corpse_sort_y_range: Vector2 = Vector2.ZERO
-
 @export var death_fade_duration: float = 0.5
 @export var death_fade_delay: float = 0.0
 @export var z_attack_priority: int = 1000
@@ -134,7 +137,6 @@ var _block_absorbed: float = 0.0
 var _last_hit_from: Vector2 = Vector2.INF
 var _sprite_base_position: Vector2
 var _idle_point_set: bool = false
-var _hit_stop_token: int = 0
 var _corpse_landing_pos: Vector2 = Vector2.INF
 var _invulnerable: bool = false
 
@@ -306,16 +308,17 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 		return
 	var pick := _pick_damage()
 	var damage_anim: StringName = pick["anim"]
-	if _state != State.IDLE or not _has_anim(damage_anim):
+	var can_react := _state == State.IDLE or _state == State.DODGING
+	if not can_react or not _has_anim(damage_anim):
 		_apply_damage(amount)
 		return
 	var id := _begin_action()
 	_state = State.HIT
 	_play_anim(damage_anim)
+	_apply_damage(amount)
 	await _await_anim_frame(damage_anim, int(pick["frame"]), id)
 	if id != _action_id:
 		return
-	_apply_damage(amount)
 	await _await_anim_end(damage_anim, id)
 	if id != _action_id:
 		return
@@ -409,19 +412,6 @@ func _move_to(pos: Vector2, speed_px: float, id: int) -> bool:
 	var t := clampf(global_position.distance_to(pos) / speed_px, min_phase_duration, max_phase_duration)
 	return await _tween_self_to(pos, t, id)
 
-# ── juice: hit stop ──
-
-func _play_hit_stop(duration: float = hit_stop_duration) -> void:
-	if duration <= 0.0 or not animated_sprite:
-		return
-	_hit_stop_token += 1
-	var token := _hit_stop_token
-	var old_speed := animated_sprite.speed_scale
-	animated_sprite.speed_scale = 0.0
-	await get_tree().create_timer(duration).timeout
-	if token == _hit_stop_token and is_instance_valid(animated_sprite):
-		animated_sprite.speed_scale = old_speed
-
 # ── juice: attack ──
 
 func _tween_sprite_offset(offset: Vector2, out_time: float, back_time: float, trans: Tween.TransitionType = Tween.TRANS_QUAD) -> void:
@@ -483,7 +473,6 @@ func _apply_damage(amount: float, flash: bool = true) -> void:
 	if flash:
 		_flash(flash_color, flash_in_duration, flash_out_duration)
 	_play_hit_shake(_last_hit_from)
-	_play_hit_stop()
 
 func _die() -> void:
 	if _state == State.DEAD:
@@ -558,19 +547,7 @@ func _flash(color: Color, in_duration: float, out_duration: float) -> void:
 func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	if _state == State.DEAD:
 		return
-	var pick := _pick_damage()
-	var total := _get_anim_frame_time(pick["anim"], int(pick["frame"]))
-	var lead := total * block_anim_lead_ratio
-	if lead > 0.0:
-		await get_tree().create_timer(lead).timeout
-		if _state == State.DEAD:
-			return
 	_play_anim(ANIM_BLOCK)
-	var rest := total - lead
-	if rest > 0.0:
-		await get_tree().create_timer(rest).timeout
-		if _state == State.DEAD:
-			return
 	hit_blocked.emit()
 	_flash(block_flash_color, block_flash_in_duration, block_flash_out_duration)
 	_play_hit_shake(from_position, block_shake_distance, HitShakePreset.BLOCK_HIT)
@@ -601,7 +578,6 @@ func _start_death_knockback() -> void:
 	_corpse_landing_pos = land
 	z_index = death_flying_z
 	var fly_duration := maxf(global_position.distance_to(land) / maxf(death_knockback_speed, 1.0), min_phase_duration)
-	_play_hit_stop(maxf(hit_stop_duration * 1.5, 0.08))
 	var knockback := create_tween()
 	knockback.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	knockback.tween_property(self, "global_position", land, fly_duration)

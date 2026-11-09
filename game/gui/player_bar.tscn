@@ -2,7 +2,8 @@
 
 [ext_resource type="Texture2D" uid="uid://bbrfr60h2gg8" path="res://assets/sprites/Hero_stamina_bar_01.png" id="1_epdti"]
 [ext_resource type="Texture2D" uid="uid://h5fisltco1lr" path="res://assets/sprites/Hero_stamina_bar_02.png" id="2_al45d"]
-[ext_resource type="Script" uid="uid://cfnx41l7gfvxo" path="res://game/characters/bar.gd" id="3_epdti"]
+[ext_resource type="Script" uid="uid://cfnx41l7gfvxo" path="res://game/gui/bar.gd" id="3_epdti"]
+
 
 [node name="TextureProgressBar" type="TextureProgressBar" unique_id=1458703602]
 offset_right = 50.0

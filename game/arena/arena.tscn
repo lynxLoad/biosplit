@@ -5,88 +5,13 @@
 [ext_resource type="Texture2D" uid="uid://bqow00exlgrh8" path="res://assets/sprites/Back_04.png" id="3_elpcd"]
 [ext_resource type="Texture2D" uid="uid://cetn7xkt6b7bw" path="res://assets/sprites/Back_02.png" id="4_ld8sx"]
 [ext_resource type="PackedScene" uid="uid://b518ysonl8xuh" path="res://game/arena/battle_manager.tscn" id="5_8eybb"]
+[ext_resource type="Script" uid="uid://n4r1sqwojvv7" path="res://game/arena/battle_camera.gd" id="6_3kh18"]
 [ext_resource type="Texture2D" uid="uid://cq8ucgf1as6tu" path="res://assets/sprites/Btn_attack_01.png" id="6_5mt6i"]
 [ext_resource type="Texture2D" uid="uid://chrlgsnsjjb2f" path="res://assets/sprites/Вebuff_bar_01.png" id="6_ld8sx"]
 [ext_resource type="Texture2D" uid="uid://bdj0c5v2a0jei" path="res://assets/sprites/Btn_block_01.png" id="7_3kh18"]
 [ext_resource type="Texture2D" uid="uid://cu1wuhs4kkocv" path="res://assets/sprites/Вebuff_bar_02.png" id="7_ltahe"]
 [ext_resource type="Texture2D" uid="uid://dqad73eyr8t1c" path="res://assets/sprites/Btn_inventory_01.png" id="8_gbqjg"]
 [ext_resource type="Texture2D" uid="uid://cs3vvpca2ibyo" path="res://assets/sprites/Btn_uvorot_01.png" id="9_3sbi6"]
-
-[sub_resource type="GDScript" id="GDScript_8eybb"]
-script/source = "extends Camera2D
-
-## В эту группу игрок должен быть добавлен (add_to_group(\"player\")).
-const PLAYER_GROUP := &\"player\"
-
-@export_group(\"Screen Shake\")
-## Общий множитель амплитуды. Поставь 0.4–0.7, если 6–32 px слишком много.
-@export var shake_scale: float = 0.7
-## Скорость экспоненциального затухания (1/сек). Больше = резче.
-@export var shake_decay: float = 6.0
-## «Частота» шума для ощущения дрожи.
-@export var shake_frequency: float = 25.0
-
-var _base_offset: Vector2
-var _shake_intensity: float = 0.0
-var _phase: float = 0.0
-var _subscribed: Node = null
-
-
-func _ready() -> void:
-	_base_offset = offset
-	_try_subscribe()
-	# Ловим игрока, если он заспавнится позже камеры.
-	get_tree().node_added.connect(_on_node_added)
-
-
-func _on_node_added(node: Node) -> void:
-	if is_instance_valid(_subscribed):
-		return
-	if node.is_node_ready():
-		_try_subscribe()
-	else:
-		node.ready.connect(_try_subscribe, CONNECT_ONE_SHOT)
-
-
-func _try_subscribe() -> void:
-	if is_instance_valid(_subscribed):
-		return
-	var nodes := get_tree().get_nodes_in_group(PLAYER_GROUP)
-	for n in nodes:
-		if _subscribe(n):
-			return
-
-
-func _subscribe(node: Node) -> bool:
-	if node == null or not is_instance_valid(node):
-		return false
-	if not node.has_signal(\"screen_shake_requested\"):
-		return false
-	if not node.screen_shake_requested.is_connected(_on_screen_shake_requested):
-		node.screen_shake_requested.connect(_on_screen_shake_requested)
-	_subscribed = node
-	return true
-
-
-func _on_screen_shake_requested(intensity: float, _duration: float) -> void:
-	# Не даём слабому удару «погасить» сильный, только усиливаем.
-	_shake_intensity = maxf(_shake_intensity, intensity * shake_scale)
-
-
-func _process(delta: float) -> void:
-	if _shake_intensity <= 0.05:
-		if offset != _base_offset:
-			offset = _base_offset
-		return
-
-	_phase += delta * shake_frequency
-	_shake_intensity = lerpf(_shake_intensity, 0.0, clampf(shake_decay * delta, 0.0, 1.0))
-
-	# Две несинхронные синусоиды — дёргано, но без визуального «паттерна».
-	var n1 := sin(_phase * 1.7) + sin(_phase * 3.1) * 0.5
-	var n2 := cos(_phase * 2.3) + sin(_phase * 4.7) * 0.5
-	offset = _base_offset + Vector2(n1, n2) * _shake_intensity
-"
 
 [node name="Arena" type="Node2D" unique_id=1800405082]
 
@@ -186,8 +111,7 @@ region_rect = Rect2(0, 0, 100000, 184)
 [node name="BattleCamera" type="Camera2D" parent="." unique_id=746185389]
 position = Vector2(480, 270)
 zoom = Vector2(1.001, 1.001)
-script = SubResource("GDScript_8eybb")
-shake_decay = 8.0
+script = ExtResource("6_3kh18")
 
 [node name="BattleManager" parent="." unique_id=429190078 instance=ExtResource("5_8eybb")]
 player_spawn = Vector2(330, 340)
