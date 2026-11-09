@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bbrfr60h2gg8"
-path="res://.godot/imported/Hero_stamina_bar_01.png-42b07ae9393efe5e546bfd13dca7513e.ctex"
+uid="uid://bn4sok1txq3ek"
+path="res://.godot/imported/Stat_levl_01.png-7e44014efdecae16864eba3567bb1215.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/Hero_stamina_bar_01.png"
-dest_files=["res://.godot/imported/Hero_stamina_bar_01.png-42b07ae9393efe5e546bfd13dca7513e.ctex"]
+source_file="res://assets/sprites/Stat_levl_01.png"
+dest_files=["res://.godot/imported/Stat_levl_01.png-7e44014efdecae16864eba3567bb1215.ctex"]
 
 [params]
 
