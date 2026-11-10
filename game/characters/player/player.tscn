@@ -8,7 +8,6 @@
 [node name="Player" type="Node2D" unique_id=1115020173]
 script = ExtResource("1_5hw72")
 dodge_duration = 0.15
-dodge_cooldown = 0.0
 character_stats = ExtResource("2_mnys6")
 weapon = ExtResource("3_65114")
 _attack_frames = Dictionary[StringName, int]({
@@ -25,5 +24,5 @@ hit_shake_decay_jitter = 0.126
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=356963692]
 z_index = 1
 sprite_frames = ExtResource("1_yjtv7")
-animation = &"attack_2"
+animation = &"idle"
 offset = Vector2(0, -69)

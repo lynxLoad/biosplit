@@ -20,7 +20,6 @@ const GHOST_COLOR_END      := Color(1.0, 1.0, 1.0)
 @export var dodge_distance: float = 110.0
 @export var dodge_duration: float = 0.22
 @export_range(0.0, 1.0) var dodge_iframe_ratio: float = 0.8
-@export var dodge_cooldown: float = 0.5
 @export var dodge_return_to_idle: bool = true
 @export var dodge_return_duration: float = 0.25
 @export var dodge_screen_shake_intensity: float = 3.0
@@ -31,7 +30,6 @@ var _attack_locked: bool = false
 var _attack_turn_active: bool = false
 var _block_held: bool = false
 var _dodge_active: bool = false
-var _dodge_cooldown_timer: float = 0.0
 var _queued_attack: bool = false
 var _queued_dodge: bool = false
 
@@ -56,8 +54,6 @@ func _process(delta: float) -> void:
 	elif Input.is_action_just_pressed(&"dodge"):
 		_try_dodge()
 
-	if _dodge_cooldown_timer > 0.0:
-		_dodge_cooldown_timer = maxf(0.0, _dodge_cooldown_timer - delta)
 	_maybe_execute_queued_dodge()
 	_maybe_execute_queued_attack()
 	_maybe_enter_queued_block()
@@ -115,16 +111,15 @@ func _nearest_enemy() -> CharacterBase:
 func _try_dodge() -> void:
 	if _state == State.DEAD or _attack_locked:
 		return
-	if _dodge_active or _dodge_cooldown_timer > 0.0:
-		return
 	_queued_attack = false
-	if _attack_turn_active:
+	if _attack_turn_active or _dodge_active:
 		_queued_dodge = true
-		return
-	if _state != State.IDLE and _state != State.BLOCKING:
 		return
 	if _state == State.BLOCKING:
 		unblock()
+	elif _state != State.IDLE:
+		_queued_dodge = true
+		return
 	_start_dodge()
 
 func _start_dodge() -> void:
@@ -164,7 +159,6 @@ func _start_dodge() -> void:
 
 	_state = State.IDLE
 	_dodge_active = false
-	_dodge_cooldown_timer = dodge_cooldown
 	_play_anim(ANIM_IDLE)
 	turn_finished.emit()
 
@@ -287,8 +281,6 @@ func _maybe_execute_queued_dodge() -> void:
 	if _state == State.BLOCKING:
 		unblock()
 	if is_busy():
-		return
-	if _dodge_active or _dodge_cooldown_timer > 0.0:
 		return
 	_queued_dodge = false
 	_start_dodge()
