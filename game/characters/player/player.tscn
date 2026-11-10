@@ -15,6 +15,8 @@ _attack_frames = Dictionary[StringName, int]({
 &"attack_1": 2,
 &"attack_2": 2
 })
+strike_slowmo_enabled = false
+strike_slowmo_ramp_down = 0.1
 hit_shake_preset = 1
 hit_shake_distance_jitter = 0.3
 hit_shake_duration_jitter = 0.159

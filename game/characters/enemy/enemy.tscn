@@ -10,8 +10,12 @@
 script = ExtResource("1_g3g3m")
 character_stats = ExtResource("2_u24cp")
 weapon = ExtResource("3_u24cp")
-hit_shake_preset = 1
+_attack_frames = Dictionary[StringName, int]({
+&"attack": 0
+})
 attack_recoil_distance = 3.0
+strike_slowmo_scale = 0.174
+hit_shake_preset = 1
 death_landing_bounds = Rect2(0, 0, 1111, 1111)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2005773418]

@@ -7,7 +7,7 @@ const PLAYER_GROUP := &"player"
 const DODGE_ANIM := &"dodge"
 
 # ── Dash afterimage (ghost trail) ──
-const GHOST_SPAWN_INTERVAL := 0.03
+const GHOST_SPAWN_INTERVAL := 0.02
 const GHOST_FADE_TIME      := 0.25
 const GHOST_START_ALPHA    := 0.7
 const GHOST_END_ALPHA      := 0.25

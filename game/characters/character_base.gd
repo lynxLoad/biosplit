@@ -64,6 +64,18 @@ const CORPSE_GROUP := &"corpses"
 @export_range(0.0, 16.0) var attack_lunge_distance: float = 4.0
 @export_range(0.0, 16.0) var attack_recoil_distance: float = 5.0
 
+# ── strike slow-mo ──
+@export_group("Strike Slow-Mo")
+## Включать глобальное замедление времени перед ударом.
+@export var strike_slowmo_enabled: bool = true
+## До какой скорости замедляется время (1.0 = норма, 0.25 = четверть).
+@export_range(0.05, 1.0) var strike_slowmo_scale: float = 0.25
+## Реальное время (сек) плавного замедления.
+@export var strike_slowmo_ramp_down: float = 0.15
+## Минимальная длительность slow-mo в реальном времени (сек).
+## Гарантирует, что замедление видно, даже если impact_frame = 0.
+@export var strike_slowmo_min_duration: float = 0.12
+
 # ── hit shake ──
 @export_group("Hit Shake")
 @export var hit_shake_preset: HitShakePreset = HitShakePreset.JAB
@@ -139,6 +151,9 @@ var _sprite_base_position: Vector2
 var _idle_point_set: bool = false
 var _corpse_landing_pos: Vector2 = Vector2.INF
 var _invulnerable: bool = false
+var _slowmo_token: int = 0
+var _slowmo_active: bool = false
+var _slowmo_prev_scale: float = 1.0	
 
 func _ready() -> void:
 	if character_stats == null:
@@ -151,6 +166,9 @@ func _ready() -> void:
 	if animated_sprite:
 		_sprite_base_position = animated_sprite.position
 		_play_anim(ANIM_IDLE)
+
+func _exit_tree() -> void:
+	_end_strike_slowmo()
 
 # ── idle point ──
 
@@ -239,15 +257,29 @@ func attack(enemy: CharacterBase) -> void:
 	var impact_frame := int(pick["frame"])
 	_play_anim(attack_anim)
 	_play_attack_lunge(dir)
+	_start_strike_slowmo()
 	if weapon:
-		await _await_anim_frame(attack_anim, impact_frame, id)
-		if id != _action_id:
-			return
-		await _play_attack_anticipation(attack_anim, impact_frame, id)
-		if id != _action_id:
-			return
+		var have_impact_frame := impact_frame > 0 and _has_anim(attack_anim)
+		if have_impact_frame:
+			await _await_anim_frame(attack_anim, impact_frame, id)
+			if id != _action_id:
+				_end_strike_slowmo()
+				return
+			await _play_attack_anticipation(attack_anim, impact_frame, id)
+			if id != _action_id:
+				_end_strike_slowmo()
+				return
+		else:
+			# Fallback: нет реального кадра удара → даём slow-mo время проявиться.
+			# ignore_time_scale = true, иначе таймер замедлится вместе с миром.
+			var hold := maxf(strike_slowmo_ramp_down, strike_slowmo_min_duration)
+			await get_tree().create_timer(hold, true, false, true).timeout
+			if id != _action_id:
+				_end_strike_slowmo()
+				return
 
 	# ── удар ──
+	_end_strike_slowmo()
 	if is_instance_valid(enemy) and not enemy.is_dead():
 		if _is_strike_in_range(enemy, dir):
 			enemy.take_damage(weapon.damage, global_position)
@@ -404,6 +436,7 @@ func _get_post_hit_return_point() -> Vector2:
 
 func _begin_action() -> int:
 	_kill_tween(_active_tween)
+	_end_strike_slowmo()
 	_action_id += 1
 	return _action_id
 
@@ -472,6 +505,41 @@ func _play_attack_impact(anim: StringName) -> void:
 	await get_tree().create_timer(maxf(impact_time * 0.5, 0.02)).timeout
 	if is_instance_valid(animated_sprite):
 		animated_sprite.speed_scale = old_speed
+
+# ── strike slow-mo ──
+
+func _start_strike_slowmo() -> void:
+	if not strike_slowmo_enabled:
+		return
+	_slowmo_prev_scale = Engine.time_scale if Engine.time_scale > 0.0 else 1.0
+	_slowmo_active = true
+	_slowmo_token += 1
+	_ramp_time_scale(strike_slowmo_scale, strike_slowmo_ramp_down, _slowmo_token)
+
+func _end_strike_slowmo() -> void:
+	if not _slowmo_active:
+		return
+	_slowmo_active = false
+	_slowmo_token += 1
+	Engine.time_scale = _slowmo_prev_scale
+
+func _ramp_time_scale(target: float, duration: float, token: int) -> void:
+	if duration <= 0.0:
+		if token == _slowmo_token:
+			Engine.time_scale = target
+		return
+	var start_scale := Engine.time_scale
+	var start_real := Time.get_ticks_msec() / 1000.0
+	var elapsed := 0.0
+	while token == _slowmo_token and elapsed < duration:
+		await get_tree().process_frame
+		if token != _slowmo_token:
+			return
+		elapsed = Time.get_ticks_msec() / 1000.0 - start_real
+		var t := clampf(elapsed / duration, 0.0, 1.0)
+		Engine.time_scale = lerpf(start_scale, target, t)
+	if token == _slowmo_token:
+		Engine.time_scale = target
 
 # ── damage ──
 
