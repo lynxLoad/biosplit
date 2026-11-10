@@ -71,6 +71,13 @@ func _any_enemy_attacking() -> bool:
 			return true
 	return false
 
+func is_about_to_attack() -> bool:
+	if _state == State.DEAD:
+		return false
+	if not _has_valid_target():
+		return false
+	return _attack_energy >= attack_energy_threshold
+
 # ── урон / хил ──
 
 func heal(amount: float) -> void:

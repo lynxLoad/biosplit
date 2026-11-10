@@ -156,6 +156,7 @@ var _slowmo_active: bool = false
 var _slowmo_prev_scale: float = 1.0	
 
 func _ready() -> void:
+	#Engine.time_scale = 0.2
 	if character_stats == null:
 		push_error("CharacterBase: character_stats не задан на %s" % name)
 		character_stats = CharacterStats.new()

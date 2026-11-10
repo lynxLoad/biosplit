@@ -32,6 +32,8 @@ var _attack_turn_active: bool = false
 var _block_held: bool = false
 var _dodge_active: bool = false
 var _dodge_cooldown_timer: float = 0.0
+var _queued_attack: bool = false
+var _queued_dodge: bool = false
 
 func _ready() -> void:
 	super()
@@ -56,6 +58,8 @@ func _process(delta: float) -> void:
 
 	if _dodge_cooldown_timer > 0.0:
 		_dodge_cooldown_timer = maxf(0.0, _dodge_cooldown_timer - delta)
+	_maybe_execute_queued_dodge()
+	_maybe_execute_queued_attack()
 	_maybe_enter_queued_block()
 
 func _apply_damage(amount: float, flash: bool = true) -> void:
@@ -88,6 +92,12 @@ func _find_attacking_enemy() -> CharacterBase:
 func _any_enemy_attacking() -> bool:
 	return _find_attacking_enemy() != null
 
+func _any_enemy_about_to_attack() -> bool:
+	for e in enemies:
+		if is_instance_valid(e) and e.is_about_to_attack():
+			return true
+	return false
+
 func _nearest_enemy() -> CharacterBase:
 	var best: CharacterBase = null
 	var best_d2 := INF
@@ -103,7 +113,13 @@ func _nearest_enemy() -> CharacterBase:
 # ── dodge ──
 
 func _try_dodge() -> void:
-	if not _can_start_action() or _dodge_active or _dodge_cooldown_timer > 0.0:
+	if _state == State.DEAD or _attack_locked:
+		return
+	if _dodge_active or _dodge_cooldown_timer > 0.0:
+		return
+	_queued_attack = false
+	if _attack_turn_active:
+		_queued_dodge = true
 		return
 	if _state != State.IDLE and _state != State.BLOCKING:
 		return
@@ -213,18 +229,69 @@ func _on_dodged_hit(amount: float, from_position: Vector2) -> void:
 # ── attack ──
 
 func _try_attack() -> void:
-	if not _can_start_action():
+	if _state == State.DEAD or _attack_locked:
+		return
+	_queued_dodge = false
+	if _attack_turn_active:
+		_queued_attack = true
 		return
 	if _state == State.BLOCKING:
 		unblock()
-	if is_busy() or _any_enemy_attacking():
+	if is_busy() or _any_enemy_attacking() or _any_enemy_about_to_attack():
+		_queued_attack = true
 		return
+	_start_attack_now()
+
+func _start_attack_now() -> void:
 	var enemy := _nearest_enemy()
 	if enemy == null:
 		return
+	_queued_attack = false
 	_attack_turn_active = true
 	attack(enemy)
 	_wait_turn_end()
+
+func _maybe_execute_queued_attack() -> void:
+	if not _queued_attack:
+		return
+	if _state == State.DEAD or _attack_locked:
+		_queued_attack = false
+		return
+	if _attack_turn_active or is_busy():
+		return
+	if _state != State.IDLE:
+		return
+	if _any_enemy_attacking() or _any_enemy_about_to_attack():
+		return
+	if _nearest_enemy() == null:
+		_queued_attack = false
+		return
+	_start_attack_now()
+
+func _maybe_enter_queued_block() -> void:
+	if not _block_held or _attack_locked or _attack_turn_active:
+		return
+	if _queued_dodge or _queued_attack:
+		return
+	if _state == State.IDLE:
+		block()
+
+func _maybe_execute_queued_dodge() -> void:
+	if not _queued_dodge:
+		return
+	if _state == State.DEAD or _attack_locked:
+		_queued_dodge = false
+		return
+	if _attack_turn_active:
+		return
+	if _state == State.BLOCKING:
+		unblock()
+	if is_busy():
+		return
+	if _dodge_active or _dodge_cooldown_timer > 0.0:
+		return
+	_queued_dodge = false
+	_start_dodge()
 
 func _wait_turn_end() -> void:
 	if is_busy():
@@ -240,12 +307,6 @@ func _try_block() -> void:
 	if _state == State.BLOCKING or is_busy():
 		return
 	block()
-
-func _maybe_enter_queued_block() -> void:
-	if not _block_held or _attack_locked or _attack_turn_active:
-		return
-	if _state == State.IDLE:
-		block()
 
 func _get_post_hit_return_point() -> Vector2:
 	return idle_point
