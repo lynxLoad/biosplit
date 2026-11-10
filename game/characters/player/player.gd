@@ -151,10 +151,10 @@ func _nearest_enemy() -> CharacterBase:
 # ── dodge ──
 
 func _try_dodge() -> void:
-	if _state == State.DEAD or _attack_locked:
+	if _state == State.DEAD:
 		return
 	_queued_attack = false
-	if _attack_turn_active or _dodge_active:
+	if _attack_locked or _attack_turn_active or _dodge_active:
 		_queued_dodge = true
 		return
 	if _state == State.BLOCKING:
@@ -260,10 +260,10 @@ func _on_dodged_hit(amount: float, from_position: Vector2) -> void:
 # ── attack ──
 
 func _try_attack() -> void:
-	if _state == State.DEAD or _attack_locked:
+	if _state == State.DEAD:
 		return
 	_queued_dodge = false
-	if _attack_turn_active:
+	if _attack_locked or _attack_turn_active:
 		_queued_attack = true
 		return
 	if _state == State.BLOCKING:
@@ -285,10 +285,10 @@ func _start_attack_now() -> void:
 func _maybe_execute_queued_attack() -> void:
 	if not _queued_attack:
 		return
-	if _state == State.DEAD or _attack_locked:
+	if _state == State.DEAD:
 		_queued_attack = false
 		return
-	if _attack_turn_active or is_busy():
+	if _attack_locked or _attack_turn_active or is_busy():
 		return
 	if _state != State.IDLE:
 		return
@@ -310,10 +310,10 @@ func _maybe_enter_queued_block() -> void:
 func _maybe_execute_queued_dodge() -> void:
 	if not _queued_dodge:
 		return
-	if _state == State.DEAD or _attack_locked:
+	if _state == State.DEAD:
 		_queued_dodge = false
 		return
-	if _attack_turn_active:
+	if _attack_locked or _attack_turn_active:
 		return
 	if _state == State.BLOCKING:
 		unblock()
