@@ -24,6 +24,39 @@ const GHOST_COLOR_END      := Color(1.0, 1.0, 1.0)
 @export var dodge_return_duration: float = 0.25
 @export var dodge_screen_shake_intensity: float = 3.0
 
+# ── Block juice ──
+@export_group("Block Juice")
+@export var block_aura_color: Color = Color(0.4, 0.7, 1.0, 1.0)
+@export var block_burst_color: Color = Color(0.75, 0.92, 1.0, 1.0)
+@export var block_hit_flash_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+@export_range(0.0, 1.0) var block_aura_steady_alpha: float = 0.45
+@export var block_aura_fade_in_time: float = 0.14
+@export var block_aura_fade_out_time: float = 0.15
+@export var block_aura_scale: float = 1.14
+@export var block_aura_scale_pulse: float = 1.24
+@export var block_aura_pulse_time: float = 0.65
+@export var block_aura_rot_pulse: float = 0.05
+@export var block_enter_pop_scale: float = 1.10
+@export var block_enter_pop_time: float = 0.13
+@export var block_enter_burst_alpha: float = 0.8
+@export var block_enter_burst_scale: float = 1.6
+@export var block_enter_burst_time: float = 0.35
+@export var block_hit_squash: Vector2 = Vector2(0.88, 1.14)
+@export var block_hit_recover_time: float = 0.16
+@export var block_hit_burst_alpha: float = 0.9
+@export var block_hit_burst_scale: float = 1.8
+@export var block_hit_burst_time: float = 0.25
+@export var block_hit_screen_shake: float = 4.0
+@export var block_hit_screen_time: float = 0.22
+
+@export_subgroup("Block Hit Tilt")
+## Максимальный угол наклона спрайта в сторону удара (радианы). 0 — отключено.
+@export_range(0.0, 0.5) var block_hit_tilt: float = 0.12
+## Длительность «щёлчка» в наклон.
+@export var block_hit_tilt_out_time: float = 0.04
+## Длительность возврата в исходное положение.
+@export var block_hit_tilt_back_time: float = 0.14
+
 var enemies: Array[CharacterBase] = []
 
 var _attack_locked: bool = false
@@ -33,6 +66,12 @@ var _dodge_active: bool = false
 var _queued_attack: bool = false
 var _queued_dodge: bool = false
 
+var _block_aura: AnimatedSprite2D
+var _block_aura_tween: Tween
+var _block_pulse_tween: Tween
+var _block_scale_tween: Tween
+var _sprite_base_scale: Vector2 = Vector2.ONE
+
 func _ready() -> void:
 	super()
 	add_to_group(PLAYER_GROUP)
@@ -40,6 +79,8 @@ func _ready() -> void:
 		_attack_frames = { &"attack_1": 0, &"attack_2": 0 }
 	if _attack_weights.is_empty():
 		_attack_weights = { &"attack_1": 2.0, &"attack_2": 1.0 }
+	if animated_sprite:
+		_sprite_base_scale = animated_sprite.scale
 
 func _process(delta: float) -> void:
 	if Input.is_action_pressed(&"block"):
@@ -54,6 +95,7 @@ func _process(delta: float) -> void:
 	elif Input.is_action_just_pressed(&"dodge"):
 		_try_dodge()
 
+	_sync_block_aura()
 	_maybe_execute_queued_dodge()
 	_maybe_execute_queued_attack()
 	_maybe_enter_queued_block()
@@ -135,10 +177,8 @@ func _start_dodge() -> void:
 	_active_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_active_tween.tween_property(self, "global_position", target, dodge_duration)
 
-	# Послеобраз идёт параллельно движению и iframe-циклу
 	_spawn_dash_ghosts(id)
 
-	# i-frames занимают часть рывка
 	var iframe_time := dodge_duration * dodge_iframe_ratio
 	var elapsed := 0.0
 	while id == _action_id and elapsed < iframe_time:
@@ -180,8 +220,6 @@ func _resolve_dodge_direction() -> Vector2:
 
 # ── dash afterimage ──
 
-## Фоновый спавнер: тикает раз в GHOST_SPAWN_INTERVAL в течение dodge_duration.
-## Автоматически останавливается при смене _action_id (отмена/смерть/новый экшен).
 func _spawn_dash_ghosts(id: int) -> void:
 	var elapsed := 0.0
 	while id == _action_id and elapsed < dodge_duration:
@@ -189,7 +227,6 @@ func _spawn_dash_ghosts(id: int) -> void:
 		await get_tree().create_timer(GHOST_SPAWN_INTERVAL).timeout
 		elapsed += GHOST_SPAWN_INTERVAL
 
-## t ∈ [0, 1] — прогресс дэша: 0 = старт (яркий синий), 1 = конец (бледный белый).
 func _spawn_dash_ghost(t: float) -> void:
 	if not animated_sprite:
 		return
@@ -300,5 +337,166 @@ func _try_block() -> void:
 		return
 	block()
 
+func block() -> void:
+	if _state not in [State.IDLE, State.MOVING_TO_IDLE]:
+		return
+	super()
+	if _state == State.BLOCKING:
+		_begin_block_visuals()
+
+func unblock() -> void:
+	if _state != State.BLOCKING:
+		return
+	_end_block_visuals()
+	super()
+
+func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) -> void:
+	super(amount, from_position)
+	if _state == State.BLOCKING:
+		_block_hit_visuals(from_position)
+
+func _die() -> void:
+	if _state == State.BLOCKING or (_block_aura and is_instance_valid(_block_aura)):
+		_end_block_visuals()
+	super()
+
 func _get_post_hit_return_point() -> Vector2:
 	return idle_point
+
+# ── block juice ──
+
+func _begin_block_visuals() -> void:
+	if not animated_sprite:
+		return
+	_sprite_pop(block_enter_pop_scale, block_enter_pop_time)
+	_spawn_block_aura()
+	_spawn_block_burst(block_burst_color, block_enter_burst_alpha, block_enter_burst_scale, block_enter_burst_time)
+
+func _end_block_visuals() -> void:
+	_kill_tween(_block_aura_tween)
+	_kill_tween(_block_pulse_tween)
+	_kill_tween(_block_scale_tween)
+	_sprite_scale_reset()
+	if _block_aura and is_instance_valid(_block_aura):
+		var old := _block_aura
+		_block_aura = null
+		var tw := create_tween()
+		tw.tween_property(old, "modulate:a", 0.0, block_aura_fade_out_time)
+		tw.tween_callback(old.queue_free)
+
+## Визуальная (rest) позиция спрайта в локальных координатах Player.
+## = позиция спрайта + его offset * его базовый масштаб.
+func _get_sprite_visual_local_base() -> Vector2:
+	if not animated_sprite:
+		return Vector2.ZERO
+	return _sprite_base_position + animated_sprite.offset * _sprite_base_scale
+
+func _spawn_block_aura() -> void:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
+	if _block_aura and is_instance_valid(_block_aura):
+		_block_aura.queue_free()
+
+	var aura_scale := maxf(block_aura_scale, 0.001)
+
+	_block_aura = AnimatedSprite2D.new()
+	_block_aura.sprite_frames = animated_sprite.sprite_frames
+	# Копируем offset (с компенсацией масштаба ауры) — так её визуальный
+	# центр совпадает с визуальным центром спрайта, даже если у спрайта
+	# задан offset (например (0, -69) для «поднятия» картинки).
+	_block_aura.offset = animated_sprite.offset / aura_scale
+	# Ставим в rest-позицию спрайта: не дёргается от hit-shake.
+	_block_aura.position = _sprite_base_position
+	_block_aura.z_index = animated_sprite.z_index - 1
+	_block_aura.scale = _sprite_base_scale * aura_scale
+	_block_aura.speed_scale = animated_sprite.speed_scale
+	_block_aura.modulate = Color(block_aura_color.r, block_aura_color.g, block_aura_color.b, 0.0)
+	add_child(_block_aura)
+	_block_aura.play(animated_sprite.animation)
+	_block_aura.frame = animated_sprite.frame
+
+	_block_aura_tween = create_tween()
+	_block_aura_tween.tween_property(_block_aura, "modulate:a", block_aura_steady_alpha, block_aura_fade_in_time)
+
+	_block_pulse_tween = create_tween().set_loops()
+	_block_pulse_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_block_pulse_tween.tween_property(_block_aura, "scale", _sprite_base_scale * block_aura_scale_pulse, block_aura_pulse_time)
+	_block_pulse_tween.parallel().tween_property(_block_aura, "rotation", block_aura_rot_pulse, block_aura_pulse_time)
+	_block_pulse_tween.tween_property(_block_aura, "scale", _sprite_base_scale * aura_scale, block_aura_pulse_time)
+	_block_pulse_tween.parallel().tween_property(_block_aura, "rotation", -block_aura_rot_pulse, block_aura_pulse_time)
+
+func _spawn_block_burst(color: Color, alpha: float, scale_end: float, duration: float) -> void:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
+	var burst := AnimatedSprite2D.new()
+	burst.sprite_frames = animated_sprite.sprite_frames
+	# Тот же offset и rest-позиция — burst рождается ровно на визуальном
+	# центре спрайта.
+	burst.offset = animated_sprite.offset
+	burst.position = _sprite_base_position
+	burst.z_index = animated_sprite.z_index - 1
+	burst.scale = _sprite_base_scale
+	burst.speed_scale = animated_sprite.speed_scale
+	burst.modulate = Color(color.r, color.g, color.b, alpha)
+	add_child(burst)
+	burst.play(animated_sprite.animation)
+	burst.frame = animated_sprite.frame
+
+	var tw := create_tween()
+	tw.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(burst, "scale", _sprite_base_scale * scale_end, duration)
+	tw.parallel().tween_property(burst, "modulate:a", 0.0, duration)
+	tw.tween_callback(burst.queue_free)
+
+func _block_hit_visuals(from_position: Vector2) -> void:
+	# squash&stretch
+	if animated_sprite:
+		_kill_tween(_block_scale_tween)
+		animated_sprite.scale = _sprite_base_scale * block_hit_squash
+		_block_scale_tween = create_tween()
+		_block_scale_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_block_scale_tween.tween_property(animated_sprite, "scale", _sprite_base_scale, block_hit_recover_time)
+
+	# вспышка ауры
+	if _block_aura and is_instance_valid(_block_aura):
+		_block_aura.modulate = Color(block_hit_flash_color.r, block_hit_flash_color.g, block_hit_flash_color.b, block_aura_steady_alpha)
+		var tw := create_tween()
+		tw.tween_property(_block_aura, "modulate",
+			Color(block_aura_color.r, block_aura_color.g, block_aura_color.b, block_aura_steady_alpha), 0.18)
+
+	# расходящееся кольцо
+	_spawn_block_burst(block_hit_flash_color, block_hit_burst_alpha, block_hit_burst_scale, block_hit_burst_time)
+
+	# усиленный screen shake
+	screen_shake_requested.emit(block_hit_screen_shake, block_hit_screen_time)
+
+	# наклон спрайта в сторону удара
+	if animated_sprite and block_hit_tilt > 0.0:
+		var dir := _dir_from(from_position, Vector2.UP)
+		var tilt := dir.x * block_hit_tilt
+		var tw2 := create_tween()
+		tw2.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw2.tween_property(animated_sprite, "rotation", tilt, block_hit_tilt_out_time)
+		tw2.tween_property(animated_sprite, "rotation", 0.0, block_hit_tilt_back_time)
+
+func _sprite_pop(scale_mult: float, duration: float) -> void:
+	if not animated_sprite:
+		return
+	_kill_tween(_block_scale_tween)
+	animated_sprite.scale = _sprite_base_scale * scale_mult
+	_block_scale_tween = create_tween()
+	_block_scale_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_block_scale_tween.tween_property(animated_sprite, "scale", _sprite_base_scale, duration)
+
+func _sprite_scale_reset() -> void:
+	if animated_sprite:
+		animated_sprite.scale = _sprite_base_scale
+		animated_sprite.rotation = 0.0
+
+func _sync_block_aura() -> void:
+	if not _block_aura or not is_instance_valid(_block_aura) or not animated_sprite:
+		return
+	_block_aura.speed_scale = animated_sprite.speed_scale
+	if _block_aura.animation != animated_sprite.animation:
+		_block_aura.play(animated_sprite.animation)
+	_block_aura.frame = animated_sprite.frame

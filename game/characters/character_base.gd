@@ -192,6 +192,9 @@ func is_dead() -> bool:
 func is_attacking() -> bool:
 	return _state == State.ATTACKING or _state == State.RETREATING
 
+func is_moving_to_idle() -> bool:
+	return _state == State.MOVING_TO_IDLE
+
 func is_blocking() -> bool:
 	return _state == State.BLOCKING
 
