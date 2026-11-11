@@ -1,0 +1,286 @@
+[gd_scene format=3 uid="uid://dqfqftsid4wxw"]
+
+[ext_resource type="Texture2D" uid="uid://m47mqbs78py0" path="res://assets/sprites/Btn_uvorot_02.png" id="1_7td45"]
+[ext_resource type="Texture2D" uid="uid://cs3vvpca2ibyo" path="res://assets/sprites/Btn_uvorot_01.png" id="2_ro7r5"]
+[ext_resource type="Texture2D" uid="uid://bdj0c5v2a0jei" path="res://assets/sprites/Btn_block_01.png" id="3_ro7r5"]
+[ext_resource type="Texture2D" uid="uid://b7bmamuekg5hv" path="res://assets/sprites/Btn_inventory_02.png" id="4_t067d"]
+[ext_resource type="Texture2D" uid="uid://dqad73eyr8t1c" path="res://assets/sprites/Btn_inventory_01.png" id="5_4hsb8"]
+[ext_resource type="Texture2D" uid="uid://dd6jkyi4ttst3" path="res://assets/sprites/Btn_granata_01.png" id="6_wdmrr"]
+[ext_resource type="Texture2D" uid="uid://7vb8q7rlooai" path="res://assets/sprites/Btn_apteka_01.png" id="7_810x0"]
+[ext_resource type="Texture2D" uid="uid://hrjminbhnudu" path="res://assets/sprites/Btn_shot_pricel_02.png" id="8_lduh1"]
+[ext_resource type="Texture2D" uid="uid://cq8ucgf1as6tu" path="res://assets/sprites/Btn_attack_01.png" id="8_ncn3r"]
+[ext_resource type="Texture2D" uid="uid://cyxisv2j3fbxw" path="res://assets/sprites/Btn_shot_pricel_01.png" id="9_mcaty"]
+[ext_resource type="Texture2D" uid="uid://fbf508mbtoby" path="res://assets/sprites/Btn_shot_02.png" id="10_uahol"]
+[ext_resource type="Texture2D" uid="uid://cfwfgfxf801g6" path="res://assets/sprites/Btn_shot_01.png" id="11_bxppj"]
+[ext_resource type="Texture2D" uid="uid://cieqay4mgll8h" path="res://assets/sprites/Btn_combo_02.png" id="12_k3a5d"]
+[ext_resource type="Texture2D" uid="uid://cqrew0vvphtcp" path="res://assets/sprites/Btn_combo_01.png" id="13_j6530"]
+
+[node name="HUD" type="Control" unique_id=1803910719]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=240854917]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Top" type="Control" parent="VBoxContainer" unique_id=627041873]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Bottom" type="Control" parent="VBoxContainer" unique_id=819156195]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Bottom" unique_id=1456187833]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 35
+theme_override_constants/margin_right = 35
+theme_override_constants/margin_bottom = 26
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Bottom/MarginContainer" unique_id=217050715]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BottomLeft" type="MarginContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer" unique_id=991947111]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft" unique_id=1621105026]
+layout_mode = 2
+theme_override_constants/separation = 37
+
+[node name="DodgeBlockContainer" type="VBoxContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1473592349]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+
+[node name="DodgeBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockContainer" unique_id=1133345847]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 10
+offset_transform_enabled = true
+offset_transform_position = Vector2(6, 21)
+offset_transform_visual_only = false
+texture = ExtResource("1_7td45")
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockContainer/DodgeBtn" unique_id=285717092]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -37.5
+offset_top = -40.5
+offset_right = 37.5
+offset_bottom = 40.5
+grow_horizontal = 2
+grow_vertical = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(-1, 2)
+offset_transform_visual_only = false
+texture = ExtResource("2_ro7r5")
+
+[node name="BlockBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockContainer" unique_id=502168601]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+offset_transform_enabled = true
+offset_transform_position = Vector2(22.5, 0)
+offset_transform_visual_only = false
+texture = ExtResource("3_ro7r5")
+
+[node name="InventoryBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1783142740]
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -8)
+offset_transform_visual_only = false
+texture = ExtResource("4_t067d")
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/InventoryBtn" unique_id=1067767702]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(-1, 1)
+offset_transform_visual_only = false
+texture = ExtResource("5_4hsb8")
+
+[node name="GranataBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer" unique_id=989965888]
+layout_mode = 2
+size_flags_vertical = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -4)
+offset_transform_visual_only = false
+texture = ExtResource("6_wdmrr")
+
+[node name="Count" type="Label" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/GranataBtn" unique_id=490434633]
+modulate = Color(0.7411765, 0.7411765, 0.7411765, 1)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -23.0
+grow_horizontal = 0
+grow_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(1, 8)
+theme_override_font_sizes/font_size = 18
+text = "999"
+horizontal_alignment = 2
+vertical_alignment = 2
+
+[node name="BottomRight" type="MarginContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer" unique_id=1649746466]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GranataBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight" unique_id=625900149]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -4)
+offset_transform_visual_only = false
+texture = ExtResource("7_810x0")
+
+[node name="Count" type="Label" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/GranataBtn" unique_id=1257616831]
+modulate = Color(0.7411765, 0.7411765, 0.7411765, 1)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -23.0
+grow_horizontal = 0
+grow_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(1, 8)
+theme_override_font_sizes/font_size = 18
+text = "999"
+horizontal_alignment = 2
+vertical_alignment = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight" unique_id=584770780]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/separation = 35
+
+[node name="ShotPriceBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer" unique_id=1202999135]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(15, -8)
+offset_transform_visual_only = false
+texture = ExtResource("8_lduh1")
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ShotPriceBtn" unique_id=412846893]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_transform_enabled = true
+offset_transform_visual_only = false
+texture = ExtResource("9_mcaty")
+
+[node name="ShotBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer" unique_id=213795259]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -8)
+offset_transform_visual_only = false
+texture = ExtResource("10_uahol")
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ShotBtn" unique_id=1374729503]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(1, 0)
+offset_transform_visual_only = false
+texture = ExtResource("11_bxppj")
+
+[node name="ComboAttackContainer" type="VBoxContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer" unique_id=1195072273]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ComboAttackContainer" unique_id=969942702]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 10
+offset_transform_enabled = true
+offset_transform_position = Vector2(-6, 21)
+offset_transform_visual_only = false
+texture = ExtResource("12_k3a5d")
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ComboAttackContainer/TextureRect" unique_id=1076311448]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -37.5
+offset_top = -39.5
+offset_right = 37.5
+offset_bottom = 39.5
+grow_horizontal = 2
+grow_vertical = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, 1)
+texture = ExtResource("13_j6530")
+
+[node name="BlockBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ComboAttackContainer" unique_id=1187534755]
+layout_mode = 2
+size_flags_vertical = 10
+offset_transform_enabled = true
+offset_transform_position = Vector2(-22.5, 0)
+offset_transform_visual_only = false
+texture = ExtResource("8_ncn3r")

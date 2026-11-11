@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://bjsn5f3j22js6"]
+
+[ext_resource type="Script" uid="uid://n4r1sqwojvv7" path="res://game/arena/battle_camera.gd" id="1_ga71v"]
+
+[node name="BattleCamera" type="Camera2D" unique_id=186963937]
+zoom = Vector2(1.001, 1.001)
+script = ExtResource("1_ga71v")

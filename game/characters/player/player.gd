@@ -57,6 +57,10 @@ const GHOST_COLOR_END      := Color(1.0, 1.0, 1.0)
 ## Длительность возврата в исходное положение.
 @export var block_hit_tilt_back_time: float = 0.14
 
+# ── Attack pacing ──
+## Микро-пауза после завершения атаки, прежде чем можно начать следующую (сек).
+@export var attack_recovery: float = 0.12
+
 var enemies: Array[CharacterBase] = []
 
 var _attack_locked: bool = false

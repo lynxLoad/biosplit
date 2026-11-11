@@ -6,4 +6,4 @@
 script = ExtResource("1_8oh8g")
 name = &"Knife"
 damage = 5.0
-animation_frame_attack = 2
+animation_frame_attack = 0
