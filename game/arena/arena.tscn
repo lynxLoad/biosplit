@@ -371,3 +371,4 @@ horizontal_alignment = 1
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2057815488]
 
 [node name="HUD" parent="CanvasLayer" unique_id=1803910719 instance=ExtResource("39_5qxpj")]
+visible = false
