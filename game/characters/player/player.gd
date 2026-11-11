@@ -87,6 +87,11 @@ func _ready() -> void:
 		_sprite_base_scale = animated_sprite.scale
 
 func _process(delta: float) -> void:
+	if Input.is_action_just_pressed(&"attack"):
+		_try_attack()
+	elif Input.is_action_just_pressed(&"dodge"):
+		_try_dodge()
+
 	if Input.is_action_pressed(&"block"):
 		_block_held = true
 		_try_block()
@@ -94,10 +99,6 @@ func _process(delta: float) -> void:
 		_block_held = false
 		if _state == State.BLOCKING:
 			unblock()
-	elif Input.is_action_just_pressed(&"attack"):
-		_try_attack()
-	elif Input.is_action_just_pressed(&"dodge"):
-		_try_dodge()
 
 	_sync_block_aura()
 	_maybe_execute_queued_dodge()
@@ -270,11 +271,14 @@ func _try_attack() -> void:
 	if _attack_locked or _attack_turn_active:
 		_queued_attack = true
 		return
-	if _state == State.BLOCKING:
-		unblock()
-	if is_busy() or _any_enemy_attacking() or _any_enemy_about_to_attack():
+	if _state != State.IDLE and _state != State.BLOCKING:
 		_queued_attack = true
 		return
+	if _any_enemy_attacking() or _any_enemy_about_to_attack():
+		_queued_attack = true
+		return
+	if _state == State.BLOCKING:
+		unblock()
 	_start_attack_now()
 
 func _start_attack_now() -> void:
@@ -292,21 +296,21 @@ func _maybe_execute_queued_attack() -> void:
 	if _state == State.DEAD:
 		_queued_attack = false
 		return
-	if _attack_locked or _attack_turn_active or is_busy():
+	if _attack_locked or _attack_turn_active:
 		return
-	if _state != State.IDLE:
+	if _state != State.IDLE and _state != State.BLOCKING:
 		return
 	if _any_enemy_attacking() or _any_enemy_about_to_attack():
 		return
 	if _nearest_enemy() == null:
 		_queued_attack = false
 		return
+	if _state == State.BLOCKING:
+		unblock()
 	_start_attack_now()
 
 func _maybe_enter_queued_block() -> void:
 	if not _block_held or _attack_locked or _attack_turn_active:
-		return
-	if _queued_dodge or _queued_attack:
 		return
 	if _state == State.IDLE:
 		block()

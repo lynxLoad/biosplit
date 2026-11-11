@@ -1,19 +1,33 @@
 [gd_scene format=3 uid="uid://dqfqftsid4wxw"]
 
 [ext_resource type="Texture2D" uid="uid://m47mqbs78py0" path="res://assets/sprites/Btn_uvorot_02.png" id="1_7td45"]
+[ext_resource type="Texture2D" uid="uid://cgrwh2krj0hgt" path="res://assets/sprites/Stat_portret_01.png" id="1_mcaty"]
 [ext_resource type="Texture2D" uid="uid://cs3vvpca2ibyo" path="res://assets/sprites/Btn_uvorot_01.png" id="2_ro7r5"]
+[ext_resource type="Texture2D" uid="uid://bn4sok1txq3ek" path="res://assets/sprites/Stat_levl_01.png" id="2_uahol"]
+[ext_resource type="Texture2D" uid="uid://bdmv3fq6wss7d" path="res://assets/sprites/Stat_exit_01.png" id="3_bxppj"]
+[ext_resource type="Texture2D" uid="uid://bgkr8kvgy0d5n" path="res://assets/sprites/Stat_bar_helth_01.png" id="3_j6530"]
 [ext_resource type="Texture2D" uid="uid://bdj0c5v2a0jei" path="res://assets/sprites/Btn_block_01.png" id="3_ro7r5"]
+[ext_resource type="Texture2D" uid="uid://d4ip84e6mr72p" path="res://assets/sprites/Stat_bar_helth_02.png" id="4_gw8ep"]
 [ext_resource type="Texture2D" uid="uid://b7bmamuekg5hv" path="res://assets/sprites/Btn_inventory_02.png" id="4_t067d"]
 [ext_resource type="Texture2D" uid="uid://dqad73eyr8t1c" path="res://assets/sprites/Btn_inventory_01.png" id="5_4hsb8"]
+[ext_resource type="Texture2D" uid="uid://d1wdqiyp5j68u" path="res://assets/sprites/Stat_bar_expa_01.png" id="5_6mr7h"]
+[ext_resource type="Texture2D" uid="uid://c1kp4w1yyygk7" path="res://assets/sprites/Stat_bar_expa_02.png" id="6_qmnqy"]
 [ext_resource type="Texture2D" uid="uid://dd6jkyi4ttst3" path="res://assets/sprites/Btn_granata_01.png" id="6_wdmrr"]
 [ext_resource type="Texture2D" uid="uid://7vb8q7rlooai" path="res://assets/sprites/Btn_apteka_01.png" id="7_810x0"]
 [ext_resource type="Texture2D" uid="uid://hrjminbhnudu" path="res://assets/sprites/Btn_shot_pricel_02.png" id="8_lduh1"]
 [ext_resource type="Texture2D" uid="uid://cq8ucgf1as6tu" path="res://assets/sprites/Btn_attack_01.png" id="8_ncn3r"]
+[ext_resource type="Texture2D" uid="uid://cgtwqg34af2so" path="res://assets/sprites/Stat_debaf_slabost_01.png" id="8_qmnqy"]
+[ext_resource type="Texture2D" uid="uid://cyun5pftdxago" path="res://assets/sprites/Stat_bolezn_01.png" id="9_8ax8y"]
 [ext_resource type="Texture2D" uid="uid://cyxisv2j3fbxw" path="res://assets/sprites/Btn_shot_pricel_01.png" id="9_mcaty"]
+[ext_resource type="Texture2D" uid="uid://dejxgvel7m3mb" path="res://assets/sprites/Stat_sitost_01.png" id="10_n2uio"]
 [ext_resource type="Texture2D" uid="uid://fbf508mbtoby" path="res://assets/sprites/Btn_shot_02.png" id="10_uahol"]
+[ext_resource type="Texture2D" uid="uid://cp7iifubehhsb" path="res://assets/sprites/Stat_voda_01.png" id="11_7as1x"]
 [ext_resource type="Texture2D" uid="uid://cfwfgfxf801g6" path="res://assets/sprites/Btn_shot_01.png" id="11_bxppj"]
 [ext_resource type="Texture2D" uid="uid://cieqay4mgll8h" path="res://assets/sprites/Btn_combo_02.png" id="12_k3a5d"]
+[ext_resource type="Texture2D" uid="uid://drqejn7bu02ds" path="res://assets/sprites/Stat_energiya_01.png" id="12_n2uio"]
+[ext_resource type="Texture2D" uid="uid://kqcobnfk3s3t" path="res://assets/sprites/Stat_option_01.png" id="13_7as1x"]
 [ext_resource type="Texture2D" uid="uid://cqrew0vvphtcp" path="res://assets/sprites/Btn_combo_01.png" id="13_j6530"]
+[ext_resource type="Texture2D" uid="uid://c8qxpu8d7rn35" path="res://assets/sprites/Stat_enemy_01.png" id="14_7hu2p"]
 
 [node name="HUD" type="Control" unique_id=1803910719]
 layout_mode = 3
@@ -22,6 +36,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+offset_transform_enabled = true
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=240854917]
 layout_mode = 1
@@ -31,43 +46,309 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Top" type="Control" parent="VBoxContainer" unique_id=627041873]
+[node name="Top" type="MarginContainer" parent="VBoxContainer" unique_id=692338120]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 9
+theme_override_constants/margin_right = 22
 
-[node name="Bottom" type="Control" parent="VBoxContainer" unique_id=819156195]
+[node name="ParamsRunContainer" type="VBoxContainer" parent="VBoxContainer/Top" unique_id=1868812703]
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_horizontal = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Bottom" unique_id=1456187833]
+[node name="ParamsContainer" type="HBoxContainer" parent="VBoxContainer/Top/ParamsRunContainer" unique_id=1126045057]
+layout_mode = 2
+theme_override_constants/separation = -2
+
+[node name="CharaPortrait" type="TextureRect" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer" unique_id=946756277]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+texture = ExtResource("1_mcaty")
+
+[node name="LevelLabel" type="VBoxContainer" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer" unique_id=1021980039]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, 3)
+theme_override_constants/separation = -6
+
+[node name="Level" type="Label" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/LevelLabel" unique_id=953358297]
+modulate = Color(0.65, 0.65, 0.65, 1)
+layout_mode = 2
+offset_transform_enabled = true
+theme_override_font_sizes/font_size = 24
+text = "54"
+horizontal_alignment = 1
+
+[node name="TextureLVL" type="TextureRect" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/LevelLabel" unique_id=2001003092]
+layout_mode = 2
+size_flags_horizontal = 4
+offset_transform_enabled = true
+offset_transform_position = Vector2(1, 2)
+texture = ExtResource("2_uahol")
+
+[node name="HealthExpBarsContainer" type="VBoxContainer" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer" unique_id=2008958064]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(8, 0)
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=1836805058]
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, 5)
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer/HBoxContainer" unique_id=1381768397]
+modulate = Color(0.65, 0.65, 0.46150002, 1)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "MERFI GREEN"
+
+[node name="HealthLabel" type="Label" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer/HBoxContainer" unique_id=194136672]
+modulate = Color(0.65, 0.65, 0.46150002, 1)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "100"
+horizontal_alignment = 2
+
+[node name="HealthBar" type="TextureProgressBar" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=1894885132]
+layout_mode = 2
+value = 100.0
+texture_under = ExtResource("3_j6530")
+texture_progress = ExtResource("4_gw8ep")
+
+[node name="ExpBar" type="TextureProgressBar" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=2039429960]
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -1)
+value = 100.0
+texture_under = ExtResource("5_6mr7h")
+texture_progress = ExtResource("6_qmnqy")
+
+[node name="RunButton" type="TextureButton" parent="VBoxContainer/Top/ParamsRunContainer" unique_id=1293912298]
+layout_mode = 2
+size_flags_horizontal = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(2, 8)
+texture_normal = ExtResource("3_bxppj")
+
+[node name="DebuffContainer" type="HBoxContainer" parent="VBoxContainer/Top" unique_id=750633468]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, 13)
+
+[node name="WeaknessIcon" type="TextureRect" parent="VBoxContainer/Top/DebuffContainer" unique_id=1760598268]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 0
+texture = ExtResource("8_qmnqy")
+
+[node name="DebuffLabelContainer" type="VBoxContainer" parent="VBoxContainer/Top/DebuffContainer" unique_id=1350587337]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -7)
+theme_override_constants/separation = -6
+
+[node name="DebuffMultLabel" type="Label" parent="VBoxContainer/Top/DebuffContainer/DebuffLabelContainer" unique_id=1570333961]
+modulate = Color(0.8, 0.8, 0.8, 1)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "x2"
+
+[node name="DebuffLabel" type="Label" parent="VBoxContainer/Top/DebuffContainer/DebuffLabelContainer" unique_id=560701073]
+modulate = Color(0.8, 0.8, 0.8, 1)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "222m"
+
+[node name="StatsSettingsDeathContainer" type="VBoxContainer" parent="VBoxContainer/Top" unique_id=1879006230]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(-62, 13)
+
+[node name="StatsSettingsContainer" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer" unique_id=308534601]
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="DeseaseHungerThirstContainer" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer" unique_id=1445600208]
+layout_mode = 2
+
+[node name="DiseaseContainer" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/DeseaseHungerThirstContainer" unique_id=1190578722]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="DiseaseIcon" type="TextureRect" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/DeseaseHungerThirstContainer/DiseaseContainer" unique_id=1620606107]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+texture = ExtResource("9_8ax8y")
+
+[node name="DiseaseLabel" type="Label" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/DeseaseHungerThirstContainer/DiseaseContainer" unique_id=754573266]
+modulate = Color(0.77, 0.77, 0.5621, 1)
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -7)
+theme_override_font_sizes/font_size = 18
+text = "999"
+
+[node name="HungerContainer" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/DeseaseHungerThirstContainer" unique_id=1548300768]
+layout_mode = 2
+offset_transform_position = Vector2(0, 1)
+theme_override_constants/separation = 1
+
+[node name="HungerIcon" type="TextureRect" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/DeseaseHungerThirstContainer/HungerContainer" unique_id=348935500]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -1.5)
+texture = ExtResource("10_n2uio")
+
+[node name="HungerLabel" type="Label" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/DeseaseHungerThirstContainer/HungerContainer" unique_id=385289367]
+modulate = Color(0.8392157, 0.8392157, 0.8392157, 1)
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -7)
+theme_override_font_sizes/font_size = 18
+text = "999"
+
+[node name="ThirstContainer" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/DeseaseHungerThirstContainer" unique_id=116409549]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="ThirstIcon" type="TextureRect" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/DeseaseHungerThirstContainer/ThirstContainer" unique_id=1348768445]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -2)
+texture = ExtResource("11_7as1x")
+
+[node name="ThirstLabel" type="Label" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/DeseaseHungerThirstContainer/ThirstContainer" unique_id=1700983197]
+modulate = Color(0.6039216, 0.77254903, 0.8509804, 1)
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -7)
+theme_override_font_sizes/font_size = 18
+text = "999"
+
+[node name="EnergyContainer" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer" unique_id=1909890259]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, 2)
+theme_override_constants/separation = 1
+
+[node name="EnergyIcon" type="TextureRect" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/EnergyContainer" unique_id=2012429439]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 4
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -2)
+texture = ExtResource("12_n2uio")
+
+[node name="Control" type="Control" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/EnergyContainer" unique_id=341928340]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="EnergyLabel" type="Label" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/EnergyContainer/Control" unique_id=1464586078]
+modulate = Color(0.78039217, 0.78039217, 0.78039217, 1)
+custom_minimum_size = Vector2(46.47, 35.59)
+propagate_maximum_size = true
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -18.0
+offset_right = 46.47
+offset_bottom = 18.0
 grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0.5, -4)
+theme_override_font_sizes/font_size = 26
+text = "999"
+clip_text = true
+
+[node name="Control" type="Control" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer" unique_id=46875495]
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(25, 13)
+
+[node name="SettingsButton" type="TextureButton" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/Control" unique_id=2120691412]
+layout_mode = 0
+offset_left = -28.0
+offset_right = -9.0
+offset_bottom = 19.0
+size_flags_horizontal = 8
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(47, -13)
+texture_normal = ExtResource("13_7as1x")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer" unique_id=658361671]
+layout_mode = 2
+size_flags_horizontal = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, -4)
+
+[node name="EnemyDeathIcon" type="TextureRect" parent="VBoxContainer/Top/StatsSettingsDeathContainer/HBoxContainer" unique_id=1492118410]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(65, 1)
+texture = ExtResource("14_7hu2p")
+
+[node name="EnemyDeathLabel" type="Label" parent="VBoxContainer/Top/StatsSettingsDeathContainer/HBoxContainer" unique_id=1546875009]
+modulate = Color(0.8, 0.8, 0.8, 1)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(63, 6)
+theme_override_font_sizes/font_size = 14
+text = "x2"
+
+[node name="Bottom" type="MarginContainer" parent="VBoxContainer" unique_id=1456187833]
+layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/margin_left = 35
 theme_override_constants/margin_right = 35
 theme_override_constants/margin_bottom = 26
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Bottom/MarginContainer" unique_id=217050715]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Bottom" unique_id=217050715]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="BottomLeft" type="MarginContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer" unique_id=991947111]
+[node name="BottomLeft" type="MarginContainer" parent="VBoxContainer/Bottom/HBoxContainer" unique_id=991947111]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft" unique_id=1621105026]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft" unique_id=1621105026]
 layout_mode = 2
 theme_override_constants/separation = 37
 
-[node name="DodgeBlockContainer" type="VBoxContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1473592349]
+[node name="DodgeBlockInvContainer" type="VBoxContainer" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1473592349]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
 
-[node name="DodgeBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockContainer" unique_id=1133345847]
+[node name="DodgeBackground" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockInvContainer" unique_id=1133345847]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 10
@@ -76,7 +357,7 @@ offset_transform_position = Vector2(6, 21)
 offset_transform_visual_only = false
 texture = ExtResource("1_7td45")
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockContainer/DodgeBtn" unique_id=285717092]
+[node name="DodgeButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockInvContainer/DodgeBackground" unique_id=470076913]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -92,18 +373,18 @@ grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(-1, 2)
 offset_transform_visual_only = false
-texture = ExtResource("2_ro7r5")
+texture_normal = ExtResource("2_ro7r5")
 
-[node name="BlockBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockContainer" unique_id=502168601]
+[node name="BlockButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockInvContainer" unique_id=1592513928]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
 offset_transform_enabled = true
 offset_transform_position = Vector2(22.5, 0)
 offset_transform_visual_only = false
-texture = ExtResource("3_ro7r5")
+texture_normal = ExtResource("3_ro7r5")
 
-[node name="InventoryBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1783142740]
+[node name="InventoryBackground" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1783142740]
 layout_mode = 2
 size_flags_horizontal = 2
 size_flags_vertical = 8
@@ -112,7 +393,7 @@ offset_transform_position = Vector2(0, -8)
 offset_transform_visual_only = false
 texture = ExtResource("4_t067d")
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/InventoryBtn" unique_id=1067767702]
+[node name="InventoryButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/InventoryBackground" unique_id=1361812149]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -121,24 +402,24 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -20.0
 offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_right = 34.0
+offset_bottom = 39.0
 grow_horizontal = 2
 grow_vertical = 2
 offset_transform_enabled = true
-offset_transform_position = Vector2(-1, 1)
+offset_transform_position = Vector2(-8, -9)
 offset_transform_visual_only = false
-texture = ExtResource("5_4hsb8")
+texture_normal = ExtResource("5_4hsb8")
 
-[node name="GranataBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer" unique_id=989965888]
+[node name="GranataButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1683952240]
 layout_mode = 2
 size_flags_vertical = 8
 offset_transform_enabled = true
 offset_transform_position = Vector2(0, -4)
 offset_transform_visual_only = false
-texture = ExtResource("6_wdmrr")
+texture_normal = ExtResource("6_wdmrr")
 
-[node name="Count" type="Label" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomLeft/HBoxContainer/GranataBtn" unique_id=490434633]
+[node name="CountLabel" type="Label" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/GranataButton" unique_id=490434633]
 modulate = Color(0.7411765, 0.7411765, 0.7411765, 1)
 layout_mode = 1
 anchors_preset = 3
@@ -157,20 +438,20 @@ text = "999"
 horizontal_alignment = 2
 vertical_alignment = 2
 
-[node name="BottomRight" type="MarginContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer" unique_id=1649746466]
+[node name="BottomRight" type="MarginContainer" parent="VBoxContainer/Bottom/HBoxContainer" unique_id=1649746466]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="GranataBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight" unique_id=625900149]
+[node name="AptekaButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight" unique_id=1187542348]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
 offset_transform_enabled = true
 offset_transform_position = Vector2(0, -4)
 offset_transform_visual_only = false
-texture = ExtResource("7_810x0")
+texture_normal = ExtResource("7_810x0")
 
-[node name="Count" type="Label" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/GranataBtn" unique_id=1257616831]
+[node name="CountLabel" type="Label" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AptekaButton" unique_id=1257616831]
 modulate = Color(0.7411765, 0.7411765, 0.7411765, 1)
 layout_mode = 1
 anchors_preset = 3
@@ -189,12 +470,12 @@ text = "999"
 horizontal_alignment = 2
 vertical_alignment = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight" unique_id=584770780]
+[node name="AttackContainer" type="HBoxContainer" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight" unique_id=584770780]
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_constants/separation = 35
 
-[node name="ShotPriceBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer" unique_id=1202999135]
+[node name="ShotPriceBackground" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer" unique_id=1202999135]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
@@ -203,7 +484,7 @@ offset_transform_position = Vector2(15, -8)
 offset_transform_visual_only = false
 texture = ExtResource("8_lduh1")
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ShotPriceBtn" unique_id=412846893]
+[node name="ShotPriceButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ShotPriceBackground" unique_id=1655114086]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -212,15 +493,16 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -20.0
 offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_right = 40.0
+offset_bottom = 41.0
 grow_horizontal = 2
 grow_vertical = 2
 offset_transform_enabled = true
+offset_transform_position = Vector2(-10, -11)
 offset_transform_visual_only = false
-texture = ExtResource("9_mcaty")
+texture_normal = ExtResource("9_mcaty")
 
-[node name="ShotBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer" unique_id=213795259]
+[node name="ShotBackground" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer" unique_id=213795259]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
@@ -229,7 +511,7 @@ offset_transform_position = Vector2(0, -8)
 offset_transform_visual_only = false
 texture = ExtResource("10_uahol")
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ShotBtn" unique_id=1374729503]
+[node name="ShotButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ShotBackground" unique_id=1622462060]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -238,20 +520,20 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -20.0
 offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_right = 38.0
+offset_bottom = 42.0
 grow_horizontal = 2
 grow_vertical = 2
 offset_transform_enabled = true
-offset_transform_position = Vector2(1, 0)
+offset_transform_position = Vector2(-8, -11)
 offset_transform_visual_only = false
-texture = ExtResource("11_bxppj")
+texture_normal = ExtResource("11_bxppj")
 
-[node name="ComboAttackContainer" type="VBoxContainer" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer" unique_id=1195072273]
+[node name="ComboAttackContainer" type="VBoxContainer" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer" unique_id=1195072273]
 layout_mode = 2
 size_flags_vertical = 8
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ComboAttackContainer" unique_id=969942702]
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=969942702]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 10
@@ -260,7 +542,7 @@ offset_transform_position = Vector2(-6, 21)
 offset_transform_visual_only = false
 texture = ExtResource("12_k3a5d")
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ComboAttackContainer/TextureRect" unique_id=1076311448]
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer/TextureRect" unique_id=1076311448]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -277,7 +559,7 @@ offset_transform_enabled = true
 offset_transform_position = Vector2(0, 1)
 texture = ExtResource("13_j6530")
 
-[node name="BlockBtn" type="TextureRect" parent="VBoxContainer/Bottom/MarginContainer/HBoxContainer/BottomRight/HBoxContainer/ComboAttackContainer" unique_id=1187534755]
+[node name="BlockButton" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=1187534755]
 layout_mode = 2
 size_flags_vertical = 10
 offset_transform_enabled = true

@@ -43,7 +43,6 @@
 [node name="Arena" type="Node2D" unique_id=1800405082]
 
 [node name="Background" type="Node2D" parent="." unique_id=1873647051]
-visible = false
 z_index = -4015
 
 [node name="Parallax2D" type="Parallax2D" parent="Background" unique_id=1655981381]
@@ -107,6 +106,7 @@ enemy_spawns = Array[Vector2]([Vector2(570, 340), Vector2(720, 305), Vector2(820
 reflow_duration = 0.2
 
 [node name="Hud" type="Control" parent="." unique_id=417985858]
+visible = false
 z_index = 4096
 layout_mode = 3
 anchors_preset = 0
@@ -150,6 +150,7 @@ offset_left = 109.0
 offset_top = 11.0
 offset_right = 226.0
 offset_bottom = 37.0
+offset_transform_enabled = true
 theme_override_font_sizes/font_size = 18
 text = "MERFI GREEN"
 
@@ -371,4 +372,3 @@ horizontal_alignment = 1
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2057815488]
 
 [node name="HUD" parent="CanvasLayer" unique_id=1803910719 instance=ExtResource("39_5qxpj")]
-visible = false
