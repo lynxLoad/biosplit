@@ -141,6 +141,7 @@ var _corpse_landing_pos: Vector2 = Vector2.INF
 var _invulnerable: bool = false
 
 func _ready() -> void:
+	#Engine.time_scale = 0.2
 	if character_stats == null:
 		push_error("CharacterBase: character_stats не задан на %s" % name)
 		character_stats = CharacterStats.new()

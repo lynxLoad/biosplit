@@ -7,7 +7,7 @@ const PLAYER_GROUP := &"player"
 const DODGE_ANIM := &"dodge"
 
 # ── Dash afterimage (ghost trail) ──
-const GHOST_SPAWN_INTERVAL := 0.02
+const GHOST_SPAWN_INTERVAL := 0.01
 const GHOST_FADE_TIME      := 0.25
 const GHOST_START_ALPHA    := 0.7
 const GHOST_END_ALPHA      := 0.25
@@ -17,6 +17,7 @@ const GHOST_SCALE_FADE     := 0.85
 const GHOST_COLOR_START    := Color(0.0, 0.4, 1.0, 1.0)
 const GHOST_COLOR_END      := Color(1.0, 1.0, 1.0)
 
+@export_group("Dodge")
 @export var dodge_distance: float = 110.0
 @export var dodge_duration: float = 0.22
 @export_range(0.0, 1.0) var dodge_iframe_ratio: float = 0.8
@@ -57,6 +58,37 @@ const GHOST_COLOR_END      := Color(1.0, 1.0, 1.0)
 ## Длительность возврата в исходное положение.
 @export var block_hit_tilt_back_time: float = 0.14
 
+# ── Damage juice (fast souls-like defaults) ──
+@export_group("Damage Juice")
+## Цвет красного «призрака» — дубликата спрайта, отлетающего от удара.
+@export var damage_afterimage_color: Color = Color(1.0, 0.35, 0.35, 0.9)
+## Насколько далеко отлетает призрак от точки удара.
+@export var damage_afterimage_distance: float = 14.0
+## Длительность затухания призрака.
+@export var damage_afterimage_time: float = 0.14
+## Squash спрайта в момент удара (X — шире, Y — ниже). Vector2.ONE — выкл.
+@export var damage_squash: Vector2 = Vector2(1.12, 0.88)
+## Время восстановления после squash.
+@export var damage_recover_time: float = 0.16
+## Наклон спрайта в сторону удара (радианы). 0 — отключено.
+@export_range(0.0, 0.5) var damage_tilt: float = 0.10
+## Время возврата наклона.
+@export var damage_tilt_back_time: float = 0.18
+## Отброс спрайта через `offset` (не сбивает idle_point и hit-shake). 0 — выкл.
+@export var damage_knockback_distance: float = 8.0
+## Время отброса.
+@export var damage_knockback_time: float = 0.07
+## Время возврата после отброса.
+@export var damage_knockback_return_time: float = 0.18
+## Цвет расходящегося кольца.
+@export var damage_burst_color: Color = Color(1.0, 0.4, 0.4, 1.0)
+@export_range(0.0, 1.0) var damage_burst_alpha: float = 0.75
+## Во сколько раз кольцо увеличивается за время жизни.
+@export var damage_burst_scale: float = 1.3
+@export var damage_burst_time: float = 0.18
+## Множитель screen shake для обычного урона (blocked урон не затрагивается).
+@export var damage_shake_mult: float = 1.0
+
 # ── Attack pacing ──
 ## Микро-пауза после завершения атаки, прежде чем можно начать следующую (сек).
 @export var attack_recovery: float = 0.12
@@ -74,7 +106,10 @@ var _block_aura: AnimatedSprite2D
 var _block_aura_tween: Tween
 var _block_pulse_tween: Tween
 var _block_scale_tween: Tween
+var _damage_sprite_tween: Tween
+var _damage_offset_tween: Tween
 var _sprite_base_scale: Vector2 = Vector2.ONE
+var _sprite_base_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	super()
@@ -85,6 +120,7 @@ func _ready() -> void:
 		_attack_weights = { &"attack_1": 2.0, &"attack_2": 1.0 }
 	if animated_sprite:
 		_sprite_base_scale = animated_sprite.scale
+		_sprite_base_offset = animated_sprite.offset
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed(&"attack"):
@@ -105,15 +141,100 @@ func _process(delta: float) -> void:
 	_maybe_execute_queued_attack()
 	_maybe_enter_queued_block()
 
+# ── damage ──
+
 func _apply_damage(amount: float, flash: bool = true) -> void:
+	var was_blocking := _state == State.BLOCKING
 	_emit_screen_shake(amount)
 	super(amount, flash)
+	# Для заблокированного урона уже есть block juice — не дублируем.
+	if not was_blocking and not is_dead():
+		_play_damage_juice()
 
 func _emit_screen_shake(amount: float) -> void:
 	var p := _resolve_hit_shake()
 	var max_hp := maxf(get_max_health(), 1.0)
-	var scale := clampf(0.5 + (amount / max_hp) * 1.5, 0.5, 2.0)
+	var scale := clampf(0.5 + (amount / max_hp) * 1.5, 0.5, 2.0) * damage_shake_mult
 	screen_shake_requested.emit(float(p[0]) * scale, float(p[1]))
+
+func _play_damage_juice() -> void:
+	if not animated_sprite:
+		return
+	var dir := _dir_from(_last_hit_from, Vector2.UP)
+	_spawn_damage_afterimage(dir)
+	_spawn_damage_burst()
+	_play_damage_squash_and_tilt(dir)
+	_play_damage_knockback(dir)
+
+func _spawn_damage_afterimage(dir: Vector2) -> void:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
+	var ghost := animated_sprite.duplicate() as AnimatedSprite2D
+	if ghost == null:
+		return
+	ghost.position = animated_sprite.position
+	ghost.offset = _sprite_base_offset
+	ghost.scale = _sprite_base_scale
+	ghost.rotation = 0.0
+	ghost.z_index = animated_sprite.z_index - 1
+	ghost.modulate = damage_afterimage_color
+	ghost.speed_scale = 0.0
+	ghost.frame = animated_sprite.frame
+	add_child(ghost)
+
+	var tw := ghost.create_tween()
+	tw.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(ghost, "offset", _sprite_base_offset + dir * damage_afterimage_distance, damage_afterimage_time)
+	tw.parallel().tween_property(ghost, "modulate:a", 0.0, damage_afterimage_time)
+	tw.tween_callback(ghost.queue_free)
+
+func _spawn_damage_burst() -> void:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
+	var burst := AnimatedSprite2D.new()
+	burst.sprite_frames = animated_sprite.sprite_frames
+	burst.position = animated_sprite.position
+	burst.offset = _sprite_base_offset
+	burst.scale = _sprite_base_scale
+	burst.z_index = animated_sprite.z_index - 2
+	burst.speed_scale = 0.0
+	burst.modulate = Color(damage_burst_color.r, damage_burst_color.g, damage_burst_color.b, damage_burst_alpha)
+	add_child(burst)
+	burst.play(animated_sprite.animation)
+	burst.frame = animated_sprite.frame
+
+	var tw := burst.create_tween()
+	tw.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(burst, "scale", _sprite_base_scale * damage_burst_scale, damage_burst_time)
+	tw.parallel().tween_property(burst, "modulate:a", 0.0, damage_burst_time)
+	tw.tween_callback(burst.queue_free)
+
+func _play_damage_squash_and_tilt(dir: Vector2) -> void:
+	if not animated_sprite:
+		return
+	_kill_tween(_block_scale_tween)
+	_kill_tween(_damage_sprite_tween)
+	animated_sprite.scale = _sprite_base_scale * damage_squash
+	animated_sprite.rotation = dir.x * damage_tilt
+
+	_damage_sprite_tween = create_tween()
+	_damage_sprite_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_damage_sprite_tween.tween_property(animated_sprite, "scale", _sprite_base_scale, damage_recover_time)
+	if damage_tilt > 0.0:
+		_damage_sprite_tween.parallel().tween_property(animated_sprite, "rotation", 0.0, damage_tilt_back_time) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+func _play_damage_knockback(dir: Vector2) -> void:
+	if not animated_sprite or damage_knockback_distance <= 0.0:
+		return
+	_kill_tween(_damage_offset_tween)
+	animated_sprite.offset = _sprite_base_offset
+	_damage_offset_tween = create_tween()
+	_damage_offset_tween.set_trans(Tween.TRANS_QUAD)
+	_damage_offset_tween.tween_property(animated_sprite, "offset",
+		_sprite_base_offset + dir * damage_knockback_distance, damage_knockback_time).set_ease(Tween.EASE_OUT)
+	_damage_offset_tween.tween_property(animated_sprite, "offset",
+		_sprite_base_offset, damage_knockback_return_time).set_ease(Tween.EASE_IN_OUT)
 
 func set_attack_locked(value: bool) -> void:
 	var was_locked := _attack_locked
@@ -364,6 +485,12 @@ func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) ->
 		_block_hit_visuals(from_position)
 
 func _die() -> void:
+	_kill_tween(_damage_sprite_tween)
+	_kill_tween(_damage_offset_tween)
+	if animated_sprite:
+		animated_sprite.offset = _sprite_base_offset
+		animated_sprite.rotation = 0.0
+		animated_sprite.scale = _sprite_base_scale
 	if _state == State.BLOCKING or (_block_aura and is_instance_valid(_block_aura)):
 		_end_block_visuals()
 	super()
@@ -376,44 +503,54 @@ func _get_post_hit_return_point() -> Vector2:
 func _begin_block_visuals() -> void:
 	if not animated_sprite:
 		return
+	if _block_aura and is_instance_valid(_block_aura) \
+			and _block_pulse_tween and _block_pulse_tween.is_valid():
+		return
+
 	_sprite_pop(block_enter_pop_scale, block_enter_pop_time)
 	_spawn_block_aura()
 	_spawn_block_burst(block_burst_color, block_enter_burst_alpha, block_enter_burst_scale, block_enter_burst_time)
+
 
 func _end_block_visuals() -> void:
 	_kill_tween(_block_aura_tween)
 	_kill_tween(_block_pulse_tween)
 	_kill_tween(_block_scale_tween)
+	_block_aura_tween = null
+	_block_pulse_tween = null
+	_block_scale_tween = null
+
 	_sprite_scale_reset()
+
 	if _block_aura and is_instance_valid(_block_aura):
 		var old := _block_aura
 		_block_aura = null
+		if block_aura_fade_out_time <= 0.0:
+			old.queue_free()
+			return
 		var tw := create_tween()
 		tw.tween_property(old, "modulate:a", 0.0, block_aura_fade_out_time)
 		tw.tween_callback(old.queue_free)
 
-## Визуальная (rest) позиция спрайта в локальных координатах Player.
-## = позиция спрайта + его offset * его базовый масштаб.
-func _get_sprite_visual_local_base() -> Vector2:
-	if not animated_sprite:
-		return Vector2.ZERO
-	return _sprite_base_position + animated_sprite.offset * _sprite_base_scale
-
 func _spawn_block_aura() -> void:
 	if not animated_sprite or not animated_sprite.sprite_frames:
 		return
+
+	_kill_tween(_block_aura_tween)
+	_kill_tween(_block_pulse_tween)
+	_block_aura_tween = null
+	_block_pulse_tween = null
+
 	if _block_aura and is_instance_valid(_block_aura):
 		_block_aura.queue_free()
+		_block_aura = null
 
+	var pulse_time := maxf(block_aura_pulse_time, 0.02)
 	var aura_scale := maxf(block_aura_scale, 0.001)
 
 	_block_aura = AnimatedSprite2D.new()
 	_block_aura.sprite_frames = animated_sprite.sprite_frames
-	# Копируем offset (с компенсацией масштаба ауры) — так её визуальный
-	# центр совпадает с визуальным центром спрайта, даже если у спрайта
-	# задан offset (например (0, -69) для «поднятия» картинки).
-	_block_aura.offset = animated_sprite.offset / aura_scale
-	# Ставим в rest-позицию спрайта: не дёргается от hit-shake.
+	_block_aura.offset = _sprite_base_offset / aura_scale
 	_block_aura.position = _sprite_base_position
 	_block_aura.z_index = animated_sprite.z_index - 1
 	_block_aura.scale = _sprite_base_scale * aura_scale
@@ -428,19 +565,17 @@ func _spawn_block_aura() -> void:
 
 	_block_pulse_tween = create_tween().set_loops()
 	_block_pulse_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_block_pulse_tween.tween_property(_block_aura, "scale", _sprite_base_scale * block_aura_scale_pulse, block_aura_pulse_time)
-	_block_pulse_tween.parallel().tween_property(_block_aura, "rotation", block_aura_rot_pulse, block_aura_pulse_time)
-	_block_pulse_tween.tween_property(_block_aura, "scale", _sprite_base_scale * aura_scale, block_aura_pulse_time)
-	_block_pulse_tween.parallel().tween_property(_block_aura, "rotation", -block_aura_rot_pulse, block_aura_pulse_time)
+	_block_pulse_tween.tween_property(_block_aura, "scale", _sprite_base_scale * block_aura_scale_pulse, pulse_time)
+	_block_pulse_tween.parallel().tween_property(_block_aura, "rotation", block_aura_rot_pulse, pulse_time)
+	_block_pulse_tween.tween_property(_block_aura, "scale", _sprite_base_scale * aura_scale, pulse_time)
+	_block_pulse_tween.parallel().tween_property(_block_aura, "rotation", -block_aura_rot_pulse, pulse_time)
 
 func _spawn_block_burst(color: Color, alpha: float, scale_end: float, duration: float) -> void:
 	if not animated_sprite or not animated_sprite.sprite_frames:
 		return
 	var burst := AnimatedSprite2D.new()
 	burst.sprite_frames = animated_sprite.sprite_frames
-	# Тот же offset и rest-позиция — burst рождается ровно на визуальном
-	# центре спрайта.
-	burst.offset = animated_sprite.offset
+	burst.offset = _sprite_base_offset
 	burst.position = _sprite_base_position
 	burst.z_index = animated_sprite.z_index - 1
 	burst.scale = _sprite_base_scale
@@ -497,9 +632,13 @@ func _sprite_pop(scale_mult: float, duration: float) -> void:
 	_block_scale_tween.tween_property(animated_sprite, "scale", _sprite_base_scale, duration)
 
 func _sprite_scale_reset() -> void:
+	_kill_tween(_block_scale_tween)
+	_kill_tween(_damage_sprite_tween)
+	_kill_tween(_damage_offset_tween)
 	if animated_sprite:
 		animated_sprite.scale = _sprite_base_scale
 		animated_sprite.rotation = 0.0
+		animated_sprite.offset = _sprite_base_offset
 
 func _sync_block_aura() -> void:
 	if not _block_aura or not is_instance_valid(_block_aura) or not animated_sprite:

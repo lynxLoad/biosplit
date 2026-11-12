@@ -7,15 +7,20 @@
 
 [node name="Player" type="Node2D" unique_id=1115020173]
 script = ExtResource("1_5hw72")
+dodge_distance = 120.0
 dodge_duration = 0.15
 block_aura_scale = 1.0
 block_aura_scale_pulse = 1.0
+block_aura_pulse_time = 0.0
 block_aura_rot_pulse = 0.0
 block_enter_pop_scale = 1.075
 block_enter_burst_scale = 1.18
+block_enter_burst_time = 0.23
 block_hit_burst_scale = 1.3
+block_hit_burst_time = 0.17
 block_hit_screen_shake = 3.0
 block_hit_tilt = 0.015
+damage_knockback_distance = 10.0
 character_stats = ExtResource("2_mnys6")
 weapon = ExtResource("3_65114")
 _attack_frames = Dictionary[StringName, int]({
@@ -26,6 +31,7 @@ hit_shake_preset = 1
 hit_shake_distance_jitter = 0.3
 hit_shake_duration_jitter = 0.159
 hit_shake_decay_jitter = 0.126
+z_attack_priority = 2000
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=356963692]
 z_index = 1
