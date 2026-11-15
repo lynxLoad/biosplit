@@ -16,7 +16,9 @@ death_landing_bounds = Rect2(0, 0, 1111, 1111)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2005773418]
 sprite_frames = ExtResource("4_ekj6g")
-animation = &"attack"
+animation = &"prepare"
+frame = 2
+frame_progress = 1.0
 offset = Vector2(0, -69)
 
 [node name="HealthBar" parent="." unique_id=210445443 instance=ExtResource("5_lgjkx")]

@@ -9,6 +9,9 @@
 [ext_resource type="Texture2D" uid="uid://bfg6j4t4ufyxv" path="res://assets/sprites/Zombi_death_02.png" id="7_yvhlv"]
 [ext_resource type="Texture2D" uid="uid://tpet78jampoc" path="res://assets/sprites/Zombi_death_03.png" id="8_v7cy6"]
 [ext_resource type="Texture2D" uid="uid://crb4anrkqc0pv" path="res://assets/sprites/Zombi_idle_02.png" id="9_mw7m8"]
+[ext_resource type="Texture2D" uid="uid://b0vqxgtaqawvy" path="res://assets/sprites/Zombi_prepare_01.png" id="10_g8pqk"]
+[ext_resource type="Texture2D" uid="uid://btxc08qtlpxp7" path="res://assets/sprites/Zombi_prepare_02.png" id="11_7072x"]
+[ext_resource type="Texture2D" uid="uid://b6hghd315j8ke" path="res://assets/sprites/Zombi_prepare_03.png" id="12_lph8g"]
 
 [resource]
 animations = [{
@@ -66,4 +69,18 @@ animations = [{
 "loop": 1,
 "name": &"idle",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("10_g8pqk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_7072x")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_lph8g")
+}],
+"loop": 0,
+"name": &"prepare",
+"speed": 7.0
 }]
