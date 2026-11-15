@@ -1,0 +1,41 @@
+# plugin.gd
+# EditorPlugin entry point.
+# Registers/unregisters the AutoLoad singleton so every project
+# that enables this plugin gets "DCKit" as a global.
+#
+# The AutoLoad is the ONLY thing the editor touches.
+# All systems (executor, logger, UI, etc.) are created at runtime by the AutoLoad.
+@tool
+extends EditorPlugin
+
+const ExportPlugin = preload("./export_plugin.gd")
+const _AUTOLOAD_NAME = "DCKit"
+const _AUTOLOAD_SCRIPT = "res://addons/dc_kit/dckit_autoload.gd"
+
+var _export_plugin: ExportPlugin = ExportPlugin.new()
+
+
+func _enter_tree() -> void:
+	_DCKitSetting.register_dckit_settings()
+	add_export_plugin(_export_plugin)
+
+
+func _exit_tree() -> void:
+	remove_export_plugin(_export_plugin)
+
+
+func _get_plugin_icon():
+	return EditorInterface.get_editor_theme().get_icon("Node", "EditorIcons")
+
+
+func _enable_plugin() -> void:
+	_DCKitSetting.register_dckit_settings()
+	_DCKitSetting.set_dckit_settings_as_internal(false)
+
+	if not ProjectSettings.has_setting("autoload/" + _AUTOLOAD_NAME):
+		add_autoload_singleton(_AUTOLOAD_NAME, _AUTOLOAD_SCRIPT)
+
+
+func _disable_plugin() -> void:
+	_DCKitSetting.set_dckit_settings_as_internal(true)
+	remove_autoload_singleton(_AUTOLOAD_NAME)

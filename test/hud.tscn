@@ -1,0 +1,295 @@
+[gd_scene format=3 uid="uid://ccbwqlui0a8gj"]
+
+[ext_resource type="Texture2D" uid="uid://cgtwqg34af2so" path="res://assets/sprites/Stat_debaf_slabost_01.png" id="1_dp0r6"]
+[ext_resource type="Texture2D" uid="uid://d1wdqiyp5j68u" path="res://assets/sprites/Stat_bar_expa_01.png" id="2_mgo6w"]
+[ext_resource type="Texture2D" uid="uid://bn4sok1txq3ek" path="res://assets/sprites/Stat_levl_01.png" id="3_qvg7g"]
+[ext_resource type="Texture2D" uid="uid://c1kp4w1yyygk7" path="res://assets/sprites/Stat_bar_expa_02.png" id="4_wu2ol"]
+[ext_resource type="Texture2D" uid="uid://bgkr8kvgy0d5n" path="res://assets/sprites/Stat_bar_helth_01.png" id="5_cce4f"]
+[ext_resource type="Texture2D" uid="uid://d4ip84e6mr72p" path="res://assets/sprites/Stat_bar_helth_02.png" id="6_wbonk"]
+[ext_resource type="Texture2D" uid="uid://cieqay4mgll8h" path="res://assets/sprites/Btn_combo_02.png" id="7_ytdel"]
+[ext_resource type="Texture2D" uid="uid://cqrew0vvphtcp" path="res://assets/sprites/Btn_combo_01.png" id="8_a3831"]
+[ext_resource type="Texture2D" uid="uid://hrjminbhnudu" path="res://assets/sprites/Btn_shot_pricel_02.png" id="9_cs6kt"]
+[ext_resource type="Texture2D" uid="uid://cyxisv2j3fbxw" path="res://assets/sprites/Btn_shot_pricel_01.png" id="10_y7wdk"]
+[ext_resource type="Texture2D" uid="uid://fbf508mbtoby" path="res://assets/sprites/Btn_shot_02.png" id="11_stxok"]
+[ext_resource type="Texture2D" uid="uid://cfwfgfxf801g6" path="res://assets/sprites/Btn_shot_01.png" id="12_ulgvu"]
+[ext_resource type="Texture2D" uid="uid://cq8ucgf1as6tu" path="res://assets/sprites/Btn_attack_01.png" id="13_hf3hw"]
+[ext_resource type="Texture2D" uid="uid://bdj0c5v2a0jei" path="res://assets/sprites/Btn_block_01.png" id="14_b2evs"]
+[ext_resource type="Texture2D" uid="uid://b7bmamuekg5hv" path="res://assets/sprites/Btn_inventory_02.png" id="15_vht54"]
+[ext_resource type="Texture2D" uid="uid://dqad73eyr8t1c" path="res://assets/sprites/Btn_inventory_01.png" id="16_g7att"]
+[ext_resource type="Texture2D" uid="uid://m47mqbs78py0" path="res://assets/sprites/Btn_uvorot_02.png" id="17_7ai74"]
+[ext_resource type="Texture2D" uid="uid://cs3vvpca2ibyo" path="res://assets/sprites/Btn_uvorot_01.png" id="18_7ygc2"]
+[ext_resource type="Texture2D" uid="uid://chrlgsnsjjb2f" path="res://assets/sprites/Вebuff_bar_01.png" id="19_k48eh"]
+[ext_resource type="Texture2D" uid="uid://cu1wuhs4kkocv" path="res://assets/sprites/Вebuff_bar_02.png" id="20_xn0fr"]
+[ext_resource type="Texture2D" uid="uid://c8qxpu8d7rn35" path="res://assets/sprites/Stat_enemy_01.png" id="21_klsr3"]
+[ext_resource type="Texture2D" uid="uid://drqejn7bu02ds" path="res://assets/sprites/Stat_energiya_01.png" id="22_q43u8"]
+[ext_resource type="Texture2D" uid="uid://kqcobnfk3s3t" path="res://assets/sprites/Stat_option_01.png" id="23_ic4by"]
+[ext_resource type="Texture2D" uid="uid://cyun5pftdxago" path="res://assets/sprites/Stat_bolezn_01.png" id="24_a13m2"]
+[ext_resource type="Texture2D" uid="uid://cp7iifubehhsb" path="res://assets/sprites/Stat_voda_01.png" id="25_apa12"]
+[ext_resource type="Texture2D" uid="uid://dejxgvel7m3mb" path="res://assets/sprites/Stat_sitost_01.png" id="26_cgfh5"]
+[ext_resource type="Texture2D" uid="uid://cgrwh2krj0hgt" path="res://assets/sprites/Stat_portret_01.png" id="27_d2rp4"]
+[ext_resource type="Texture2D" uid="uid://bdmv3fq6wss7d" path="res://assets/sprites/Stat_exit_01.png" id="28_k8kd5"]
+[ext_resource type="Texture2D" uid="uid://dd6jkyi4ttst3" path="res://assets/sprites/Btn_granata_01.png" id="29_i85g4"]
+[ext_resource type="Texture2D" uid="uid://7vb8q7rlooai" path="res://assets/sprites/Btn_apteka_01.png" id="30_kgj6l"]
+
+[node name="Hud" type="Control" unique_id=1655671486]
+z_index = 4096
+layout_mode = 3
+anchors_preset = 0
+offset_right = 970.0
+offset_bottom = 541.0
+
+[node name="StatDebafSlabost01" type="Sprite2D" parent="." unique_id=1325898490]
+position = Vector2(430.5, 30)
+texture = ExtResource("1_dp0r6")
+
+[node name="StatBarExpa01" type="Sprite2D" parent="." unique_id=1112349602]
+position = Vector2(109, 45)
+texture = ExtResource("2_mgo6w")
+offset = Vector2(98.5, 2)
+
+[node name="txt_lvl" type="Label" parent="." unique_id=974071842]
+modulate = Color(0.65, 0.65, 0.65, 1)
+layout_mode = 0
+offset_left = 70.0
+offset_top = 12.0
+offset_right = 110.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 24
+text = "54"
+horizontal_alignment = 1
+
+[node name="StatLevl01" type="Sprite2D" parent="." unique_id=35662191]
+position = Vector2(80, 42)
+texture = ExtResource("3_qvg7g")
+offset = Vector2(10, 3.5)
+
+[node name="StatBarExpa02" type="Sprite2D" parent="." unique_id=44707354]
+position = Vector2(109, 45)
+texture = ExtResource("4_wu2ol")
+offset = Vector2(98.5, 2)
+
+[node name="txt_name" type="Label" parent="." unique_id=836667646]
+modulate = Color(0.65, 0.65, 0.46150002, 1)
+layout_mode = 0
+offset_left = 109.0
+offset_top = 11.0
+offset_right = 226.0
+offset_bottom = 37.0
+offset_transform_enabled = true
+theme_override_font_sizes/font_size = 18
+text = "MERFI GREEN"
+
+[node name="txt_helth" type="Label" parent="." unique_id=1542748018]
+modulate = Color(0.65, 0.65, 0.46150002, 1)
+layout_mode = 0
+offset_left = 237.0
+offset_top = 11.0
+offset_right = 306.0
+offset_bottom = 37.0
+theme_override_font_sizes/font_size = 18
+text = "212"
+horizontal_alignment = 2
+
+[node name="StatBarHelth01" type="Sprite2D" parent="." unique_id=1149398068]
+position = Vector2(109, 36)
+texture = ExtResource("5_cce4f")
+offset = Vector2(98.5, 3)
+
+[node name="StatBarHelth02" type="Sprite2D" parent="." unique_id=265686528]
+position = Vector2(109, 36)
+texture = ExtResource("6_wbonk")
+offset = Vector2(98.5, 3)
+
+[node name="BtnCombo02" type="Sprite2D" parent="." unique_id=1582300302]
+position = Vector2(891, 401)
+texture = ExtResource("7_ytdel")
+
+[node name="BtnCombo01" type="Sprite2D" parent="." unique_id=1354013396]
+position = Vector2(891.5, 402.5)
+texture = ExtResource("8_a3831")
+
+[node name="BtnShotPricel02" type="Sprite2D" parent="." unique_id=1513758086]
+position = Vector2(701, 483.5)
+texture = ExtResource("9_cs6kt")
+
+[node name="BtnShotPricel01" type="Sprite2D" parent="." unique_id=1726816122]
+position = Vector2(701, 483.5)
+texture = ExtResource("10_y7wdk")
+
+[node name="BtnShot02" type="Sprite2D" parent="." unique_id=887443152]
+position = Vector2(770.5, 484)
+texture = ExtResource("11_stxok")
+
+[node name="BtnShot01" type="Sprite2D" parent="." unique_id=911401846]
+position = Vector2(772, 484)
+texture = ExtResource("12_ulgvu")
+
+[node name="BtnAttack01" type="Sprite2D" parent="." unique_id=81579661]
+position = Vector2(857, 467)
+texture = ExtResource("13_hf3hw")
+
+[node name="BtnBlock01" type="Sprite2D" parent="." unique_id=425799166]
+position = Vector2(106, 467)
+texture = ExtResource("14_b2evs")
+
+[node name="BtnInventory02" type="Sprite2D" parent="." unique_id=1275681763]
+position = Vector2(193.5, 483)
+texture = ExtResource("15_vht54")
+
+[node name="BtnInventory01" type="Sprite2D" parent="." unique_id=151298702]
+position = Vector2(193, 484)
+texture = ExtResource("16_g7att")
+
+[node name="BtnUvorot02" type="Sprite2D" parent="." unique_id=225062124]
+position = Vector2(72.5, 400.5)
+texture = ExtResource("17_7ai74")
+
+[node name="BtnUvorot01" type="Sprite2D" parent="." unique_id=387017985]
+position = Vector2(70, 363)
+texture = ExtResource("18_7ygc2")
+offset = Vector2(2, 40)
+region_rect = Rect2(0, 0, 76, 80)
+region_filter_clip_enabled = true
+
+[node name="Вebuff_Bar01" type="Sprite2D" parent="." unique_id=372654725]
+texture_filter = 1
+position = Vector2(320, 347)
+texture = ExtResource("19_k48eh")
+
+[node name="Вebuff_Bar02" type="Sprite2D" parent="Вebuff_Bar01" unique_id=1420590669]
+texture_filter = 1
+position = Vector2(-19, -2)
+texture = ExtResource("20_xn0fr")
+offset = Vector2(30, 1.5)
+
+[node name="txt_enemy" type="Label" parent="." unique_id=25419013]
+modulate = Color(0.8, 0.8, 0.8, 1)
+layout_mode = 0
+offset_left = 921.0
+offset_top = 50.0
+offset_right = 959.0
+offset_bottom = 70.0
+theme_override_font_sizes/font_size = 14
+text = "x2"
+
+[node name="StatEnemy01" type="Sprite2D" parent="." unique_id=1370408651]
+position = Vector2(912, 57)
+texture = ExtResource("21_klsr3")
+
+[node name="txt_debaf" type="Label" parent="." unique_id=1014343097]
+modulate = Color(0.8, 0.8, 0.8, 1)
+layout_mode = 0
+offset_left = 444.0
+offset_top = 26.0
+offset_right = 482.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 14
+text = "222m"
+
+[node name="txt_debaf_mnojitel" type="Label" parent="." unique_id=721868115]
+modulate = Color(0.8, 0.8, 0.8, 1)
+layout_mode = 0
+offset_left = 443.5
+offset_top = 12.0
+offset_right = 481.5
+offset_bottom = 32.0
+theme_override_font_sizes/font_size = 14
+text = "x2"
+
+[node name="txt_energi" type="Label" parent="." unique_id=1362734427]
+modulate = Color(0.78, 0.78, 0.78, 1)
+layout_mode = 0
+offset_left = 866.0
+offset_top = 9.0
+offset_right = 919.0
+offset_bottom = 45.0
+theme_override_font_sizes/font_size = 26
+text = "999"
+
+[node name="StatEnergiya01" type="Sprite2D" parent="." unique_id=473747897]
+position = Vector2(855, 29)
+texture = ExtResource("22_q43u8")
+
+[node name="StatOption01" type="Sprite2D" parent="." unique_id=2068528201]
+position = Vector2(928, 28)
+texture = ExtResource("23_ic4by")
+
+[node name="txt_bolezn" type="Label" parent="." unique_id=717145186]
+modulate = Color(0.77, 0.77, 0.5621, 1)
+layout_mode = 0
+offset_left = 700.0
+offset_top = 11.0
+offset_right = 735.0
+offset_bottom = 42.0
+theme_override_font_sizes/font_size = 18
+text = "999"
+
+[node name="StatBolezn01" type="Sprite2D" parent="." unique_id=1061326]
+position = Vector2(691, 25)
+texture = ExtResource("24_a13m2")
+
+[node name="txt_voda" type="Label" parent="." unique_id=1748323349]
+modulate = Color(0.60350007, 0.7719417, 0.85, 1)
+layout_mode = 0
+offset_left = 804.0
+offset_top = 11.0
+offset_right = 842.0
+offset_bottom = 42.0
+theme_override_font_sizes/font_size = 18
+text = "999"
+
+[node name="StatVoda01" type="Sprite2D" parent="." unique_id=2094831723]
+position = Vector2(797, 24)
+texture = ExtResource("25_apa12")
+
+[node name="txt_sitost" type="Label" parent="." unique_id=772454931]
+modulate = Color(0.84, 0.84, 0.84, 1)
+layout_mode = 0
+offset_left = 754.0
+offset_top = 11.0
+offset_right = 791.0
+offset_bottom = 42.0
+theme_override_font_sizes/font_size = 18
+text = "999"
+
+[node name="StatSitost01" type="Sprite2D" parent="." unique_id=1761364986]
+position = Vector2(744, 25)
+texture = ExtResource("26_cgfh5")
+
+[node name="StatPortret01" type="Sprite2D" parent="." unique_id=1080264497]
+position = Vector2(50, 45)
+texture = ExtResource("27_d2rp4")
+
+[node name="StatExit01" type="Sprite2D" parent="." unique_id=150101782]
+position = Vector2(60, 103)
+texture = ExtResource("28_k8kd5")
+
+[node name="BtnGranata01" type="Sprite2D" parent="." unique_id=1906092931]
+position = Vector2(423.5, 484.5)
+texture = ExtResource("29_i85g4")
+
+[node name="txt_karman_1" type="Label" parent="." unique_id=577106950]
+modulate = Color(0.74, 0.74, 0.74, 1)
+layout_mode = 0
+offset_left = 422.0
+offset_top = 496.0
+offset_right = 460.0
+offset_bottom = 527.0
+theme_override_font_sizes/font_size = 18
+text = "999"
+horizontal_alignment = 1
+
+[node name="BtnApteka01" type="Sprite2D" parent="." unique_id=714297144]
+position = Vector2(498.5, 484.5)
+texture = ExtResource("30_kgj6l")
+
+[node name="txt_karman_2" type="Label" parent="." unique_id=1718648355]
+modulate = Color(0.74, 0.74, 0.74, 1)
+layout_mode = 0
+offset_left = 493.0
+offset_top = 496.0
+offset_right = 531.0
+offset_bottom = 527.0
+theme_override_font_sizes/font_size = 18
+text = "999"
+horizontal_alignment = 1
