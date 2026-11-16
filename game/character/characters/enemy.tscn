@@ -13,6 +13,10 @@ character_stats = ExtResource("2_u24cp")
 weapon = ExtResource("3_q3mge")
 attack_recoil_distance = 3.0
 hit_shake_preset = 1
+hitstop_enabled = false
+block_hitstop_enabled = false
+dodge_hitstop_enabled = false
+death_hitstop_time_scale = 0.05
 death_landing_bounds = Rect2(0, 0, 1111, 1111)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2005773418]

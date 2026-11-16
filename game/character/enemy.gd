@@ -10,7 +10,7 @@ class_name Enemy
 ## Порог, при котором враг идёт в атаку.
 @export var attack_energy_threshold: float = 100.0
 ## Скорость накопления у «первого стоящего» врага (ед/сек).
-@export var energy_rate_front: float = 33.0
+@export var energy_rate_front: float = 22.0
 ## Скорость накопления у остальных (ед/сек).
 @export var energy_rate_others: float = 8.0
 @export var attack_approach_speed_mult: float = 1.0
@@ -21,7 +21,7 @@ var _reactive_block_tween: Tween
 var _reactive_pending: bool = false
 
 # ── скрытая энергия атаки ──
-var _attack_energy: float = randf_range(50, 65)
+var _attack_energy: float = randf_range(30, 80)
 var _is_front: bool = false
 var _attack_target: CharacterBase
 

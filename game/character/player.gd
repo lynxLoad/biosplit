@@ -20,7 +20,7 @@ const GHOST_COLOR_END      := Color(1.0, 1.0, 1.0)
 @export_group("Dodge")
 @export var dodge_distance: float = 110.0
 @export var dodge_duration: float = 0.22
-@export_range(0.0, 1.0) var dodge_iframe_ratio: float = 0.8
+@export_range(0.0, 1.0) var dodge_iframe_ratio: float = 0.5
 @export var dodge_return_to_idle: bool = true
 @export var dodge_return_duration: float = 0.25
 @export var dodge_screen_shake_intensity: float = 3.0
@@ -610,6 +610,12 @@ func _sprite_scale_reset() -> void:
 		animated_sprite.scale = _sprite_base_scale
 		animated_sprite.rotation = 0.0
 		animated_sprite.offset = _sprite_base_offset
+
+#func _should_prepare_before_approach() -> bool:
+	#return true
+#
+#func _approach_speed_mult() -> float:
+	#return maxf(1, 0.01)
 
 func _sync_block_aura() -> void:
 	if not _block_aura or not is_instance_valid(_block_aura) or not animated_sprite:

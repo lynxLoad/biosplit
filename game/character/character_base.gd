@@ -82,6 +82,59 @@ const CORPSE_GROUP := &"corpses"
 @export var flash_in_duration: float = 0.05
 @export var flash_out_duration: float = 0.1
 
+# ── hitstop ──
+@export_group("Hitstop")
+## Включает глобальное замедление времени при получении урона.
+@export var hitstop_enabled: bool = true
+## Множитель времени во время хитстопа (0.0 — полная заморозка).
+@export_range(0.0, 1.0) var hitstop_time_scale: float = 0.1
+## Базовая длительность хитстопа в реальных секундах.
+@export var hitstop_base_duration: float = 0.06
+## Дополнительная длительность за единицу урона (0 = без привязки к урону).
+@export var hitstop_per_damage: float = 0.0
+## Верхний предел длительности, чтобы не «залипать» на больших ударах.
+@export var hitstop_max_duration: float = 0.2
+
+@export_subgroup("Block Hitstop")
+## Хитстоп при успешном блоке (когда поглощено > 0).
+@export var block_hitstop_enabled: bool = true
+## Множитель времени во время блока.
+@export_range(0.0, 1.0) var block_hitstop_time_scale: float = 0.2
+## Базовая длительность хитстопа от блока (реальные секунды).
+@export var block_hitstop_base_duration: float = 0.05
+## Дополнительная длительность за единицу поглощённого урона.
+@export var block_hitstop_per_damage: float = 0.0
+## Верхний предел длительности блочного хитстопа.
+@export var block_hitstop_max_duration: float = 0.15
+
+@export_subgroup("Dodge Hitstop")
+## Хитстоп при успешном дэше (атака промахнулась по iframe).
+@export var dodge_hitstop_enabled: bool = true
+## Множитель времени во время дэша.
+@export_range(0.0, 1.0) var dodge_hitstop_time_scale: float = 0.15
+## Базовая длительность хитстопа от дэша (реальные секунды).
+@export var dodge_hitstop_base_duration: float = 0.08
+## Дополнительная длительность за единицу «отменённого» урона (0 = без привязки).
+@export var dodge_hitstop_per_damage: float = 0.0
+## Верхний предел длительности дэш-хитстопа.
+@export var dodge_hitstop_max_duration: float = 0.2
+
+@export_subgroup("Death Hitstop")
+## Хитстоп при летальном ударе. Заменяет обычный (не суммируется с ним).
+@export var death_hitstop_enabled: bool = true
+## Множитель времени во время смерти. 0.0 = полный фриз-фрейм.
+@export_range(0.0, 1.0) var death_hitstop_time_scale: float = 0.0
+## Базовая длительность хитстопа от смерти (реальные секунды).
+@export var death_hitstop_base_duration: float = 0.18
+## Дополнительная длительность за единицу летального урона (0 = без привязки).
+@export var death_hitstop_per_damage: float = 0.0
+## Верхний предел длительности death-хитстопа.
+@export var death_hitstop_max_duration: float = 0.4
+
+var _hitstop_active: bool = false
+var _hitstop_remaining: float = 0.0
+var _hitstop_target_time_scale: float = 1.0
+
 # ── block ──
 @export_group("Block")
 @export var block_max_absorbed_damage: float = 0.0
@@ -156,6 +209,76 @@ func _ready() -> void:
 	if animated_sprite:
 		_sprite_base_position = animated_sprite.position
 		_play_anim(ANIM_IDLE)
+
+func _exit_tree() -> void:
+	# Аварийный сброс, если сцена выгружается посреди хитстопа.
+	if _hitstop_active:
+		_hitstop_active = false
+		_hitstop_remaining = 0.0
+		_hitstop_target_time_scale = 1.0
+		Engine.time_scale = 1.0
+
+# ── hitstop ──
+
+func _trigger_hitstop(amount: float = 0.0, time_scale_override: float = -1.0) -> void:
+	if not hitstop_enabled:
+		return
+	var duration := hitstop_base_duration + hitstop_per_damage * maxf(amount, 0.0)
+	if duration <= 0.0:
+		return
+	duration = minf(duration, hitstop_max_duration)
+	var ts := hitstop_time_scale if time_scale_override < 0.0 else time_scale_override
+	_apply_hitstop(duration, ts)
+
+func _trigger_block_hitstop(absorbed: float = 0.0) -> void:
+	if not block_hitstop_enabled:
+		return
+	var duration := block_hitstop_base_duration + block_hitstop_per_damage * maxf(absorbed, 0.0)
+	if duration <= 0.0:
+		return
+	duration = minf(duration, block_hitstop_max_duration)
+	_apply_hitstop(duration, block_hitstop_time_scale)
+
+func _trigger_dodge_hitstop(amount: float = 0.0) -> void:
+	if not dodge_hitstop_enabled:
+		return
+	var duration := dodge_hitstop_base_duration + dodge_hitstop_per_damage * maxf(amount, 0.0)
+	if duration <= 0.0:
+		return
+	duration = minf(duration, dodge_hitstop_max_duration)
+	_apply_hitstop(duration, dodge_hitstop_time_scale)
+
+func _trigger_death_hitstop(amount: float = 0.0) -> void:
+	if not death_hitstop_enabled:
+		return
+	var duration := death_hitstop_base_duration + death_hitstop_per_damage * maxf(amount, 0.0)
+	if duration <= 0.0:
+		return
+	duration = minf(duration, death_hitstop_max_duration)
+	_apply_hitstop(duration, death_hitstop_time_scale)
+
+func _apply_hitstop(duration: float, time_scale: float) -> void:
+	_hitstop_remaining = maxf(_hitstop_remaining, duration)
+	var new_ts := minf(_hitstop_target_time_scale, time_scale) if _hitstop_active else time_scale
+	_hitstop_target_time_scale = new_ts
+	if _hitstop_active:
+		Engine.time_scale = _hitstop_target_time_scale
+		return
+	_hitstop_active = true
+	_run_hitstop()
+
+func _run_hitstop() -> void:
+	Engine.time_scale = _hitstop_target_time_scale
+	while _hitstop_remaining > 0.0:
+		var remaining := _hitstop_remaining
+		# ignore_time_scale = true → таймер честный в реальном времени.
+		await get_tree().create_timer(remaining, true, false, true).timeout
+		# Вычитаем отработанное, а не обнуляем — так расширение хитстопа
+		# во время await корректно увеличивает оставшееся время.
+		_hitstop_remaining = maxf(0.0, _hitstop_remaining - remaining)
+	Engine.time_scale = 1.0
+	_hitstop_active = false
+	_hitstop_target_time_scale = 1.0
 
 # ── idle point ──
 
@@ -292,7 +415,9 @@ func attack(enemy: CharacterBase, ability: Ability = null) -> void:
 	# ── удар — сразу на первом кадре атаки ──
 	if is_instance_valid(enemy) and not enemy.is_dead():
 		_apply_ap_delta(ability.ap_delta)
-		if _is_strike_in_range(enemy, dir):
+		var in_range := _is_strike_in_range(enemy, dir)
+		var dodged := enemy.is_dodging() and enemy.is_invulnerable()
+		if in_range or dodged:
 			enemy.take_damage(ability.damage, global_position)
 		else:
 			attack_missed.emit()
@@ -460,6 +585,7 @@ func _after_block_hit() -> void:
 		unblock()
 
 func _on_dodged_hit(amount: float, from_position: Vector2) -> void:
+	_trigger_dodge_hitstop(amount)
 	attack_dodged.emit(amount)
 
 func _hide_ui_on_death() -> void:
@@ -516,8 +642,14 @@ func _play_attack_recoil(dir: Vector2) -> void:
 
 func _apply_damage(amount: float, flash: bool = true) -> void:
 	health = maxf(0.0, health - amount)
+	var will_die := health <= 0.0
+	# Летальный удар заменяет обычный хитстоп death-версией (не суммируются).
+	if will_die:
+		_trigger_death_hitstop(amount)
+	else:
+		_trigger_hitstop(amount)
 	damaged.emit(amount)
-	if health <= 0.0:
+	if will_die:
 		_die()
 		return
 	if flash:
@@ -612,7 +744,10 @@ func _get_anim_frame_time(anim: StringName, frame: int) -> float:
 
 func _on_blocked_hit(amount: float, from_position: Vector2) -> void:
 	var leaked := maxf(0.0, amount - get_block_damage_reduction())
-	_block_absorbed += amount - leaked
+	var absorbed := amount - leaked
+	_block_absorbed += absorbed
+	if absorbed > 0.0:
+		_trigger_block_hitstop(absorbed)
 	await play_block_reaction(amount, from_position)
 	if _state == State.DEAD:
 		return
