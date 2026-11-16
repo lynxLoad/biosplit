@@ -1,26 +1,23 @@
 [gd_scene format=3 uid="uid://djqbckuyej0ip"]
 
 [ext_resource type="SpriteFrames" uid="uid://c77vxafmic42y" path="res://assets/resources/sprite_frames/sf_enemy.tres" id="1_3l8e2"]
-[ext_resource type="Script" uid="uid://b0f01iwno6col" path="res://game/character/enemy/enemy.gd" id="1_g3g3m"]
+[ext_resource type="Script" uid="uid://b0f01iwno6col" path="res://game/character/enemy.gd" id="1_g3g3m"]
 [ext_resource type="Resource" uid="uid://cb1mrm2vltir4" path="res://assets/resources/character_stats/cs_enemy.tres" id="2_u24cp"]
-[ext_resource type="PackedScene" uid="uid://cb0bn0xqby02y" path="res://game/gui/enemy_health_bar.tscn" id="3_tf3l0"]
-[ext_resource type="Resource" uid="uid://fh4mivy3nv6u" path="res://assets/resources/weapons/w_knife.tres" id="3_u24cp"]
+[ext_resource type="Resource" uid="uid://ckaiyl160nbn" path="res://assets/resources/weapons/w_hands.tres" id="3_q3mge"]
+[ext_resource type="PackedScene" uid="uid://cb0bn0xqby02y" path="res://game/gui/bar/bars/enemy_health_bar.tscn" id="3_tf3l0"]
 [ext_resource type="Script" uid="uid://ciq0y5phj0om" path="res://game/gui/bar/health_bar.gd" id="6_lg8fk"]
 
 [node name="Enemy" type="Node2D" unique_id=1526502826]
 script = ExtResource("1_g3g3m")
 character_stats = ExtResource("2_u24cp")
-weapon = ExtResource("3_u24cp")
-_attack_frames = Dictionary[StringName, int]({
-&"attack": 0
-})
+weapon = ExtResource("3_q3mge")
 attack_recoil_distance = 3.0
 hit_shake_preset = 1
 death_landing_bounds = Rect2(0, 0, 1111, 1111)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2005773418]
 sprite_frames = ExtResource("1_3l8e2")
-animation = &"attack"
+animation = &"hand_attack"
 offset = Vector2(0, -69)
 
 [node name="HealthBar" parent="." unique_id=210445443 instance=ExtResource("3_tf3l0")]

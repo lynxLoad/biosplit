@@ -36,7 +36,6 @@ var _reflow_serial: int = 0
 
 func _ready() -> void:
 	_spawn_all.call_deferred()
-	print("FSF")
 
 func _spawn_all() -> void:
 	assert(player_scene != null, "BattleManager: player_scene не задан")

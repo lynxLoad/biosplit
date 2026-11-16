@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="Ability" format=3 uid="uid://bdnmwdisr2oo3"]
+
+[ext_resource type="Script" uid="uid://c3g6v8v2ngmp3" path="res://assets/resources/character_stats/ability.gd" id="1_n121y"]
+
+[resource]
+script = ExtResource("1_n121y")
+name = &"default_knife"
+animation_name = &"default_knife_attack"
+animation_variants = 2
+metadata/_custom_type_script = "uid://c3g6v8v2ngmp3"

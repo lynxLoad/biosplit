@@ -1,9 +1,6 @@
 extends Node
 
 func _ready() -> void:
-	#DCKit.toggle_console()
-	#DCKit.show_console()
-	
 	DCKit.console_visibility_changed.connect(_on_console_visibility_changed)
 
 func _input(event: InputEvent) -> void:
@@ -18,7 +15,7 @@ func _input(event: InputEvent) -> void:
 func _on_console_visibility_changed(is_open: bool) -> void:
 	if is_open:
 		PauseManager.pause(PauseManager.PauseType.MENU)
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		#Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	else:
 		PauseManager.unpause(PauseManager.PauseType.MENU)
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		#Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

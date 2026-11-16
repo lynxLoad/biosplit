@@ -17,6 +17,14 @@
 animations = [{
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("9_pqgqy")
+}],
+"loop": 1,
+"name": &"block",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("1_mxawt")
 }, {
 "duration": 1.0,
@@ -29,27 +37,7 @@ animations = [{
 "texture": ExtResource("3_eb48s")
 }],
 "loop": 0,
-"name": &"attack_1",
-"speed": 10.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("1_mxawt")
-}, {
-"duration": 1.0,
-"texture": ExtResource("1_mxawt")
-}, {
-"duration": 1.0,
-"texture": ExtResource("6_40e10")
-}, {
-"duration": 1.0,
-"texture": ExtResource("7_mc1ol")
-}, {
-"duration": 1.0,
-"texture": ExtResource("8_veph6")
-}],
-"loop": 0,
-"name": &"attack_2",
+"name": &"combo_attack_1",
 "speed": 10.0
 }, {
 "frames": [{
@@ -63,16 +51,8 @@ animations = [{
 "texture": ExtResource("5_i7ngm")
 }],
 "loop": 0,
-"name": &"attack_3",
+"name": &"combo_attack_2",
 "speed": 10.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("9_pqgqy")
-}],
-"loop": 1,
-"name": &"block",
-"speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -84,6 +64,31 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("2_7yay0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_eb48s")
+}],
+"loop": 0,
+"name": &"default_knife_attack_0",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_40e10")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_mc1ol")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_veph6")
+}],
+"loop": 0,
+"name": &"default_knife_attack_1",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("11_sqp71")
 }, {
 "duration": 1.0,
@@ -92,4 +97,15 @@ animations = [{
 "loop": 1,
 "name": &"idle",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_mxawt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("1_mxawt")
+}],
+"loop": 0,
+"name": &"prepare",
+"speed": 10.0
 }]

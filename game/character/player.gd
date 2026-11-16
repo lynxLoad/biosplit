@@ -51,46 +51,29 @@ const GHOST_COLOR_END      := Color(1.0, 1.0, 1.0)
 @export var block_hit_screen_time: float = 0.22
 
 @export_subgroup("Block Hit Tilt")
-## Максимальный угол наклона спрайта в сторону удара (радианы). 0 — отключено.
 @export_range(0.0, 0.5) var block_hit_tilt: float = 0.12
-## Длительность «щёлчка» в наклон.
 @export var block_hit_tilt_out_time: float = 0.04
-## Длительность возврата в исходное положение.
 @export var block_hit_tilt_back_time: float = 0.14
 
-# ── Damage juice (fast souls-like defaults) ──
+# ── Damage juice ──
 @export_group("Damage Juice")
-## Цвет красного «призрака» — дубликата спрайта, отлетающего от удара.
 @export var damage_afterimage_color: Color = Color(1.0, 0.35, 0.35, 0.9)
-## Насколько далеко отлетает призрак от точки удара.
 @export var damage_afterimage_distance: float = 14.0
-## Длительность затухания призрака.
 @export var damage_afterimage_time: float = 0.14
-## Squash спрайта в момент удара (X — шире, Y — ниже). Vector2.ONE — выкл.
 @export var damage_squash: Vector2 = Vector2(1.12, 0.88)
-## Время восстановления после squash.
 @export var damage_recover_time: float = 0.16
-## Наклон спрайта в сторону удара (радианы). 0 — отключено.
 @export_range(0.0, 0.5) var damage_tilt: float = 0.10
-## Время возврата наклона.
 @export var damage_tilt_back_time: float = 0.18
-## Отброс спрайта через `offset` (не сбивает idle_point и hit-shake). 0 — выкл.
 @export var damage_knockback_distance: float = 8.0
-## Время отброса.
 @export var damage_knockback_time: float = 0.07
-## Время возврата после отброса.
 @export var damage_knockback_return_time: float = 0.18
-## Цвет расходящегося кольца.
 @export var damage_burst_color: Color = Color(1.0, 0.4, 0.4, 1.0)
 @export_range(0.0, 1.0) var damage_burst_alpha: float = 0.75
-## Во сколько раз кольцо увеличивается за время жизни.
 @export var damage_burst_scale: float = 1.3
 @export var damage_burst_time: float = 0.18
-## Множитель screen shake для обычного урона (blocked урон не затрагивается).
 @export var damage_shake_mult: float = 1.0
 
 # ── Attack pacing ──
-## Микро-пауза после завершения атаки, прежде чем можно начать следующую (сек).
 @export var attack_recovery: float = 0.12
 
 var enemies: Array[CharacterBase] = []
@@ -114,10 +97,6 @@ var _sprite_base_offset: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	super()
 	add_to_group(PLAYER_GROUP)
-	if _attack_frames.is_empty():
-		_attack_frames = { &"attack_1": 0, &"attack_2": 0 }
-	if _attack_weights.is_empty():
-		_attack_weights = { &"attack_1": 2.0, &"attack_2": 1.0 }
 	if animated_sprite:
 		_sprite_base_scale = animated_sprite.scale
 		_sprite_base_offset = animated_sprite.offset
@@ -147,7 +126,6 @@ func _apply_damage(amount: float, flash: bool = true) -> void:
 	var was_blocking := _state == State.BLOCKING
 	_emit_screen_shake(amount)
 	super(amount, flash)
-	# Для заблокированного урона уже есть block juice — не дублируем.
 	if not was_blocking and not is_dead():
 		_play_damage_juice()
 
@@ -511,7 +489,6 @@ func _begin_block_visuals() -> void:
 	_spawn_block_aura()
 	_spawn_block_burst(block_burst_color, block_enter_burst_alpha, block_enter_burst_scale, block_enter_burst_time)
 
-
 func _end_block_visuals() -> void:
 	_kill_tween(_block_aura_tween)
 	_kill_tween(_block_pulse_tween)
@@ -592,7 +569,6 @@ func _spawn_block_burst(color: Color, alpha: float, scale_end: float, duration: 
 	tw.tween_callback(burst.queue_free)
 
 func _block_hit_visuals(from_position: Vector2) -> void:
-	# squash&stretch
 	if animated_sprite:
 		_kill_tween(_block_scale_tween)
 		animated_sprite.scale = _sprite_base_scale * block_hit_squash
@@ -600,20 +576,15 @@ func _block_hit_visuals(from_position: Vector2) -> void:
 		_block_scale_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		_block_scale_tween.tween_property(animated_sprite, "scale", _sprite_base_scale, block_hit_recover_time)
 
-	# вспышка ауры
 	if _block_aura and is_instance_valid(_block_aura):
 		_block_aura.modulate = Color(block_hit_flash_color.r, block_hit_flash_color.g, block_hit_flash_color.b, block_aura_steady_alpha)
 		var tw := create_tween()
 		tw.tween_property(_block_aura, "modulate",
 			Color(block_aura_color.r, block_aura_color.g, block_aura_color.b, block_aura_steady_alpha), 0.18)
 
-	# расходящееся кольцо
 	_spawn_block_burst(block_hit_flash_color, block_hit_burst_alpha, block_hit_burst_scale, block_hit_burst_time)
-
-	# усиленный screen shake
 	screen_shake_requested.emit(block_hit_screen_shake, block_hit_screen_time)
 
-	# наклон спрайта в сторону удара
 	if animated_sprite and block_hit_tilt > 0.0:
 		var dir := _dir_from(from_position, Vector2.UP)
 		var tilt := dir.x * block_hit_tilt

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cimp7lob5mx6a"]
 
-[ext_resource type="Script" uid="uid://dfudv0v6jbyf6" path="res://game/character/player/player.gd" id="1_5hw72"]
+[ext_resource type="Script" uid="uid://dfudv0v6jbyf6" path="res://game/character/player.gd" id="1_5hw72"]
 [ext_resource type="SpriteFrames" uid="uid://bafe2qx535n7" path="res://assets/resources/sprite_frames/sf_player.tres" id="1_yjtv7"]
 [ext_resource type="Resource" uid="uid://bj1x5dk7bt7ev" path="res://assets/resources/character_stats/cs_player.tres" id="2_mnys6"]
 [ext_resource type="Resource" uid="uid://fh4mivy3nv6u" path="res://assets/resources/weapons/w_knife.tres" id="3_65114"]
@@ -52,10 +52,6 @@ block_hit_tilt = 0.015
 damage_knockback_distance = 10.0
 character_stats = ExtResource("2_mnys6")
 weapon = ExtResource("3_65114")
-_attack_frames = Dictionary[StringName, int]({
-&"attack_1": 2,
-&"attack_2": 2
-})
 hit_shake_preset = 1
 hit_shake_distance_jitter = 0.3
 hit_shake_duration_jitter = 0.159
@@ -66,5 +62,13 @@ z_attack_priority = 2000
 z_index = 1
 material = SubResource("ShaderMaterial_gf2du")
 sprite_frames = ExtResource("1_yjtv7")
-animation = &"attack_1"
+animation = &"prepare"
+offset = Vector2(0, -69)
+
+[node name="AnimatedSprite2D2" type="AnimatedSprite2D" parent="." unique_id=266029740]
+visible = false
+z_index = 1
+material = SubResource("ShaderMaterial_gf2du")
+sprite_frames = ExtResource("1_yjtv7")
+animation = &"default_knife_attack_0"
 offset = Vector2(0, -69)

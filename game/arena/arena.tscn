@@ -6,8 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://cetn7xkt6b7bw" path="res://assets/sprites/Back_02.png" id="4_ld8sx"]
 [ext_resource type="PackedScene" uid="uid://b518ysonl8xuh" path="res://game/arena/battle_manager.tscn" id="5_8eybb"]
 [ext_resource type="PackedScene" uid="uid://bjsn5f3j22js6" path="res://game/arena/battle_camera.tscn" id="5_18ewb"]
-[ext_resource type="PackedScene" uid="uid://cimp7lob5mx6a" path="res://game/character/player/player.tscn" id="7_18ewb"]
-[ext_resource type="PackedScene" uid="uid://djqbckuyej0ip" path="res://game/character/enemy/enemy.tscn" id="8_5qxpj"]
+[ext_resource type="PackedScene" uid="uid://cimp7lob5mx6a" path="res://game/character/characters/player.tscn" id="7_18ewb"]
+[ext_resource type="PackedScene" uid="uid://djqbckuyej0ip" path="res://game/character/characters/enemy.tscn" id="8_5qxpj"]
 [ext_resource type="PackedScene" uid="uid://dqfqftsid4wxw" path="res://game/gui/hud/hud.tscn" id="39_5qxpj"]
 
 [node name="Arena" type="Node2D" unique_id=1800405082 groups=["pause_on_menu"]]

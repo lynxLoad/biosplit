@@ -17,9 +17,9 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [autoload]
 
 DCKit="*uid://g1vgmlrh22q"
-dckit_print_bridge="*uid://cx8hrr7j8v1yl"
 PauseManager="*uid://cd20rjrrctdth"
 DcKitManager="*uid://bv4u7w6pxiwn1"
+Console="*uid://ck00brbmqjkwj"
 
 [display]
 

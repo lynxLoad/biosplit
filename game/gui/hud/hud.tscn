@@ -28,6 +28,7 @@
 [ext_resource type="Texture2D" uid="uid://kqcobnfk3s3t" path="res://assets/sprites/Stat_option_01.png" id="13_7as1x"]
 [ext_resource type="Texture2D" uid="uid://cqrew0vvphtcp" path="res://assets/sprites/Btn_combo_01.png" id="13_j6530"]
 [ext_resource type="Texture2D" uid="uid://c8qxpu8d7rn35" path="res://assets/sprites/Stat_enemy_01.png" id="14_7hu2p"]
+[ext_resource type="Script" uid="uid://by2fn083qmnqh" path="res://game/gui/charge_button/dodge_button.gd" id="17_vp4r6"]
 
 [node name="HUD" type="Control" unique_id=1803910719]
 layout_mode = 3
@@ -357,7 +358,7 @@ offset_transform_position = Vector2(6, 21)
 offset_transform_visual_only = false
 texture = ExtResource("1_7td45")
 
-[node name="DodgeButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockInvContainer/DodgeBackground" unique_id=470076913]
+[node name="DodgeButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockInvContainer/DodgeBackground" unique_id=1576145507]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -373,7 +374,11 @@ grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(-1, 2)
 offset_transform_visual_only = false
-texture_normal = ExtResource("2_ro7r5")
+value = 100.0
+fill_mode = 3
+texture_progress = ExtResource("2_ro7r5")
+script = ExtResource("17_vp4r6")
+ready_threshold = 0.1
 
 [node name="BlockButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockInvContainer" unique_id=1592513928]
 layout_mode = 2
@@ -393,7 +398,7 @@ offset_transform_position = Vector2(0, -8)
 offset_transform_visual_only = false
 texture = ExtResource("4_t067d")
 
-[node name="InventoryButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/InventoryBackground" unique_id=1361812149]
+[node name="InventoryButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/InventoryBackground" unique_id=896535330]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -409,7 +414,9 @@ grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(-8, -9)
 offset_transform_visual_only = false
-texture_normal = ExtResource("5_4hsb8")
+value = 100.0
+fill_mode = 3
+texture_progress = ExtResource("5_4hsb8")
 
 [node name="GranataButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1683952240]
 layout_mode = 2
@@ -484,7 +491,7 @@ offset_transform_position = Vector2(15, -8)
 offset_transform_visual_only = false
 texture = ExtResource("8_lduh1")
 
-[node name="ShotPriceButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ShotPriceBackground" unique_id=1655114086]
+[node name="ShotPriceButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ShotPriceBackground" unique_id=509993351]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -500,7 +507,9 @@ grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(-10, -11)
 offset_transform_visual_only = false
-texture_normal = ExtResource("9_mcaty")
+value = 100.0
+fill_mode = 3
+texture_progress = ExtResource("9_mcaty")
 
 [node name="ShotBackground" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer" unique_id=213795259]
 layout_mode = 2
@@ -511,7 +520,7 @@ offset_transform_position = Vector2(0, -8)
 offset_transform_visual_only = false
 texture = ExtResource("10_uahol")
 
-[node name="ShotButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ShotBackground" unique_id=1622462060]
+[node name="ShotButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ShotBackground" unique_id=2141368591]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -527,13 +536,15 @@ grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(-8, -11)
 offset_transform_visual_only = false
-texture_normal = ExtResource("11_bxppj")
+value = 100.0
+fill_mode = 3
+texture_progress = ExtResource("11_bxppj")
 
 [node name="ComboAttackContainer" type="VBoxContainer" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer" unique_id=1195072273]
 layout_mode = 2
 size_flags_vertical = 8
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=969942702]
+[node name="ComboBackground" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=969942702]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 10
@@ -542,7 +553,7 @@ offset_transform_position = Vector2(-6, 21)
 offset_transform_visual_only = false
 texture = ExtResource("12_k3a5d")
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer/TextureRect" unique_id=1076311448]
+[node name="ComboButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer/ComboBackground" unique_id=620991644]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -557,7 +568,9 @@ grow_horizontal = 2
 grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(0, 1)
-texture = ExtResource("13_j6530")
+value = 100.0
+fill_mode = 3
+texture_progress = ExtResource("13_j6530")
 
 [node name="BlockButton" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=1187534755]
 layout_mode = 2

@@ -13,6 +13,7 @@ class_name Enemy
 @export var energy_rate_front: float = 33.0
 ## Скорость накопления у остальных (ед/сек).
 @export var energy_rate_others: float = 8.0
+@export var attack_approach_speed_mult: float = 1.0
 
 const ENEMY_GROUP := &"enemies"
 
@@ -50,17 +51,27 @@ func _process(delta: float) -> void:
 	if not _has_valid_target():
 		return
 
+	# Бить нечем — не копим и не «зависаем» в готовности.
+	if not has_usable_ability():
+		_attack_energy = 0.0
+		return
+
 	var rate := energy_rate_front if _is_front else energy_rate_others
 	_attack_energy = minf(_attack_energy + rate * delta, attack_energy_threshold)
 	if _attack_energy < attack_energy_threshold:
 		return
 
-	# Пока игрок атакует — не бьём, но заряд сохраняем.
 	if _attack_target.is_attacking() or _any_enemy_attacking():
 		return
 
 	_attack_energy = 0.0
 	attack(_attack_target)
+
+func _should_prepare_before_approach() -> bool:
+	return true
+
+func _approach_speed_mult() -> float:
+	return maxf(attack_approach_speed_mult, 0.01)
 
 func _has_valid_target() -> bool:
 	return _attack_target != null and is_instance_valid(_attack_target) and not _attack_target.is_dead()
@@ -75,6 +86,8 @@ func is_about_to_attack() -> bool:
 	if _state == State.DEAD:
 		return false
 	if not _has_valid_target():
+		return false
+	if not has_usable_ability():
 		return false
 	return _attack_energy >= attack_energy_threshold
 

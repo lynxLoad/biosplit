@@ -11,6 +11,7 @@ signal hit_blocked(amount: float)
 signal dodge_started
 signal attack_dodged(amount: float)
 signal attack_missed
+signal ap_changed(current: float, delta: float)
 
 enum State { IDLE, MOVING_TO_IDLE, ATTACKING, RETREATING, BLOCKING, DODGING, HIT, DEAD }
 enum HitShakePreset { LIGHT, MEDIUM, HEAVY, CRITICAL, JAB, MAGIC, BLOCK_HIT, CUSTOM, NONE }
@@ -53,14 +54,11 @@ const CORPSE_GROUP := &"corpses"
 # ── animations ──
 @export_group("Animations")
 @export var animation_frame_damage: int = 1
-@export var _attack_frames: Dictionary[StringName, int] = {}
+## Веса способностей для рандомного выбора. Ключ — Ability.name.
 @export var _attack_weights: Dictionary[StringName, int] = {}
 
 # ── attack juice ──
 @export_group("Attack Juice")
-@export_range(0.1, 1.0) var attack_anticipation_speed: float = 0.45
-@export_range(1.0, 4.0) var attack_impact_speed: float = 2.0
-@export_range(0, 5) var attack_anticipation_frames: int = 2
 @export_range(0.0, 16.0) var attack_lunge_distance: float = 4.0
 @export_range(0.0, 16.0) var attack_recoil_distance: float = 5.0
 
@@ -94,6 +92,12 @@ const CORPSE_GROUP := &"corpses"
 @export var block_flash_color: Color = Color(0.4, 0.65, 1.0, 1.0)
 @export var block_flash_in_duration: float = 0.03
 @export var block_flash_out_duration: float = 0.12
+
+# ── action points ──
+@export_group("Action Points")
+@export var max_ap: float = 5.0
+
+var current_ap: float = 0.0
 
 # ── death: knockback ──
 @export_group("Death Knockback")
@@ -141,7 +145,7 @@ var _corpse_landing_pos: Vector2 = Vector2.INF
 var _invulnerable: bool = false
 
 func _ready() -> void:
-	#Engine.time_scale = 0.2
+	current_ap = clampf(current_ap, 0.0, max_ap)
 	if character_stats == null:
 		push_error("CharacterBase: character_stats не задан на %s" % name)
 		character_stats = CharacterStats.new()
@@ -201,13 +205,42 @@ func get_block_damage_reduction() -> float:
 func get_corpse_anchor() -> Vector2:
 	return _corpse_landing_pos if _corpse_landing_pos != Vector2.INF else global_position
 
+# ── action points ──
+
+func get_ap() -> float:
+	return current_ap
+
+func get_max_ap() -> float:
+	return max_ap
+
+func can_use_ability(ability: Ability) -> bool:
+	return ability != null and ability.can_use(current_ap)
+
+func _apply_ap_delta(delta: float) -> void:
+	if is_zero_approx(delta):
+		return
+	var old := current_ap
+	current_ap = clampf(current_ap + delta, 0.0, max_ap)
+	if not is_equal_approx(current_ap, old):
+		ap_changed.emit(current_ap, current_ap - old)
+
 # ── public actions ──
 
-func attack(enemy: CharacterBase) -> void:
+func attack(enemy: CharacterBase, ability: Ability = null) -> void:
 	if _state not in [State.IDLE, State.MOVING_TO_IDLE]:
 		return
 	if not is_instance_valid(enemy) or enemy.is_dead():
 		return
+	if weapon == null:
+		push_warning("CharacterBase: attack() без weapon на %s" % name)
+		return
+	if ability == null:
+		ability = _pick_ability()
+	if ability == null:
+		return
+	if not ability.can_use(current_ap):
+		return
+
 	var id := _begin_action()
 	_state = State.ATTACKING
 	target = enemy
@@ -221,45 +254,48 @@ func attack(enemy: CharacterBase) -> void:
 	if start.distance_to(anchor) > strike_distance:
 		strike_pos = anchor + dir * strike_distance
 	var speed_px := maxf(character_stats.speed, 0.01) * pixels_per_unit
+	var approach_speed_px := speed_px * _approach_speed_mult()
+
+	# ── prepare ДО подхода (для врагов) ──
+	if _should_prepare_before_approach() and ability.has_prepare() and _has_anim(ability.prepare_name):
+		_play_anim(ability.prepare_name)
+		await _await_anim_end(ability.prepare_name, id)
+		if id != _action_id:
+			return
 
 	# ── подход ──
 	if start.distance_to(strike_pos) > 1.0:
-		if not (await _move_to(strike_pos, speed_px, id)):
+		if not (await _move_to(strike_pos, approach_speed_px, id)):
 			return
-		# ретаргет: цель могла сместиться
 		var retarget_anchor := _resolve_strike_anchor(enemy)
 		var to_anchor := global_position - retarget_anchor
 		var retarget_pos := global_position
 		if to_anchor.length() > strike_distance:
 			retarget_pos = retarget_anchor + to_anchor.normalized() * strike_distance
 		if global_position.distance_to(retarget_pos) > 2.0:
-			if not (await _move_to(retarget_pos, speed_px, id)):
+			if not (await _move_to(retarget_pos, approach_speed_px, id)):
 				return
 		dir = _safe_dir(global_position - _resolve_strike_anchor(enemy), Vector2.RIGHT)
 
-	# ── анимация атаки ──
-	var pick := _pick_attack()
-	var attack_anim: StringName = pick["anim"]
-	var impact_frame := int(pick["frame"])
+	# ── prepare ПОСЛЕ подхода (для игрока — как было) ──
+	if not _should_prepare_before_approach() and ability.has_prepare() and _has_anim(ability.prepare_name):
+		_play_anim(ability.prepare_name)
+		await _await_anim_end(ability.prepare_name, id)
+		if id != _action_id:
+			return
+
+	# ── анимация атаки с первого кадра ──
+	var attack_anim := _resolve_attack_anim(ability)
 	_play_anim(attack_anim)
 	_play_attack_lunge(dir)
-	if weapon:
-		var have_impact_frame := impact_frame > 0 and _has_anim(attack_anim)
-		if have_impact_frame:
-			await _await_anim_frame(attack_anim, impact_frame, id)
-			if id != _action_id:
-				return
-			await _play_attack_anticipation(attack_anim, impact_frame, id)
-			if id != _action_id:
-				return
 
-	# ── удар ──
+	# ── удар — сразу на первом кадре атаки ──
 	if is_instance_valid(enemy) and not enemy.is_dead():
+		_apply_ap_delta(ability.ap_delta)
 		if _is_strike_in_range(enemy, dir):
-			enemy.take_damage(weapon.damage, global_position)
+			enemy.take_damage(ability.damage, global_position)
 		else:
 			attack_missed.emit()
-	_play_attack_impact(attack_anim)
 	_play_attack_recoil(dir)
 	await _await_anim_end(attack_anim, id)
 	if id != _action_id:
@@ -332,8 +368,6 @@ func take_damage(amount: float, from_position: Vector2 = Vector2.INF) -> void:
 	_state = State.IDLE
 	_play_anim(ANIM_IDLE)
 
-	# Возврат на «строевую» позицию, если наследник её задал
-	# (например, Player после доджа, из которого его выбили).
 	var return_pt := _get_post_hit_return_point()
 	if return_pt != Vector2.INF and global_position.distance_to(return_pt) > 2.0:
 		var speed_px := maxf(character_stats.speed, 0.01) * pixels_per_unit
@@ -355,40 +389,68 @@ func heal(amount: float) -> void:
 		return
 	health = minf(character_stats.max_health, health + amount)
 
+# ── ability selection ──
+
+func has_usable_ability() -> bool:
+	if weapon == null:
+		return false
+	for ab in weapon.abilities:
+		if ab == null:
+			continue
+		if not ab.can_use(current_ap):
+			continue
+		if _has_anim(ab.get_animation_name(0)):
+			return true
+	return false
+
+func _pick_ability() -> Ability:
+	if weapon == null or weapon.abilities.is_empty():
+		return null
+	var available: Array[Ability] = []
+	var total_weight := 0.0
+	for ab in weapon.abilities:
+		if ab == null:
+			continue
+		if not ab.can_use(current_ap):
+			continue
+		if not _has_anim(ab.get_animation_name(0)):
+			continue
+		available.append(ab)
+		total_weight += _ability_weight(ab.name)
+	if available.is_empty():
+		return null
+	if total_weight <= 0.0:
+		return available.pick_random()
+	var roll := randf() * total_weight
+	for ab in available:
+		roll -= _ability_weight(ab.name)
+		if roll <= 0.0:
+			return ab
+	return available[available.size() - 1]
+
+func _ability_weight(ability_name: StringName) -> float:
+	return float(_attack_weights.get(ability_name, 1.0))
+
+func _resolve_attack_anim(ability: Ability) -> StringName:
+	var variant := randi() % maxi(ability.animation_variants, 1)
+	var anim := ability.get_animation_name(variant)
+	if not _has_anim(anim) and _has_anim(ability.animation_name):
+		anim = ability.animation_name
+	return anim
+
 # ── hooks for subclasses ──
 
-func _pick_attack() -> Dictionary:
-	var default_attack := {"anim": ANIM_ATTACK, "frame": weapon.animation_frame_attack if weapon else 1}
-	if _attack_frames.is_empty():
-		return default_attack
-	var available: Array[StringName] = []
-	var total_weight := 0.0
-	for anim in _attack_frames:
-		if _has_anim(anim):
-			available.append(anim)
-			total_weight += _attack_weight(anim)
-	if available.is_empty():
-		return default_attack
-	if total_weight <= 0.0:
-		var fallback: StringName = available.pick_random()
-		return {"anim": fallback, "frame": _attack_frames[fallback]}
-	var roll := randf() * total_weight
-	var chosen: StringName = available[available.size() - 1]
-	for anim in available:
-		roll -= _attack_weight(anim)
-		if roll <= 0.0:
-			chosen = anim
-			break
-	return {"anim": chosen, "frame": _attack_frames[chosen]}
+func _should_prepare_before_approach() -> bool:
+	return false
+
+func _approach_speed_mult() -> float:
+	return 1.0
 
 func _resolve_strike_anchor(enemy: CharacterBase) -> Vector2:
 	return enemy.get_strike_anchor() if enemy.has_method("get_strike_anchor") else enemy.global_position
 
 func get_strike_anchor() -> Vector2:
 	return idle_point if _state in [State.IDLE, State.DODGING, State.MOVING_TO_IDLE] else global_position
-
-func _attack_weight(anim: StringName) -> float:
-	return float(_attack_weights.get(anim, 1.0))
 
 func _pick_damage() -> Dictionary:
 	return {"anim": ANIM_DAMAGE, "frame": animation_frame_damage}
@@ -449,35 +511,6 @@ func _play_attack_recoil(dir: Vector2) -> void:
 	if attack_recoil_distance <= 0.0:
 		return
 	_tween_sprite_offset(dir * attack_recoil_distance, 0.05, 0.10)
-
-func _play_attack_anticipation(anim: StringName, impact_frame: int, id: int) -> void:
-	if not animated_sprite or not _has_anim(anim):
-		return
-	if attack_anticipation_frames <= 0 or attack_anticipation_speed >= 1.0:
-		return
-	var target_frame := clampi(
-		impact_frame - attack_anticipation_frames, 0,
-		maxi(animated_sprite.sprite_frames.get_frame_count(anim) - 1, 0)
-	)
-	var old_speed := animated_sprite.speed_scale
-	animated_sprite.speed_scale = attack_anticipation_speed
-	while id == _action_id \
-			and animated_sprite.animation == anim \
-			and animated_sprite.is_playing() \
-			and animated_sprite.frame < target_frame:
-		await animated_sprite.frame_changed
-	if id == _action_id and is_instance_valid(animated_sprite):
-		animated_sprite.speed_scale = old_speed
-
-func _play_attack_impact(anim: StringName) -> void:
-	if not animated_sprite or attack_impact_speed <= 1.0:
-		return
-	var old_speed := animated_sprite.speed_scale
-	animated_sprite.speed_scale = attack_impact_speed
-	var impact_time := _get_anim_frame_time(anim, 1)
-	await get_tree().create_timer(maxf(impact_time * 0.5, 0.02)).timeout
-	if is_instance_valid(animated_sprite):
-		animated_sprite.speed_scale = old_speed
 
 # ── damage ──
 

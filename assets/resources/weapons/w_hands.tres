@@ -1,7 +1,15 @@
 [gd_resource type="Resource" script_class="Weapon" format=3 uid="uid://ckaiyl160nbn"]
 
 [ext_resource type="Script" uid="uid://cv1jon4lg46oi" path="res://assets/resources/weapons/weapon.gd" id="1_47hxc"]
+[ext_resource type="Script" uid="uid://c3g6v8v2ngmp3" path="res://assets/resources/character_stats/ability.gd" id="1_g0beo"]
+
+[sub_resource type="Resource" id="Resource_ajd2j"]
+script = ExtResource("1_g0beo")
+animation_name = &"hand_attack"
+ap_delta = 0.0
+metadata/_custom_type_script = "uid://c3g6v8v2ngmp3"
 
 [resource]
 script = ExtResource("1_47hxc")
 name = &"Hands"
+abilities = Array[ExtResource("1_g0beo")]([SubResource("Resource_ajd2j")])
