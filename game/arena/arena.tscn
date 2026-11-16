@@ -75,6 +75,7 @@ enemy_scene = ExtResource("8_5qxpj")
 player_spawn = Vector2(330, 340)
 enemy_spawns = Array[Vector2]([Vector2(570, 340), Vector2(720, 305), Vector2(820, 355)])
 reflow_duration = 0.2
+total_enemies = 18
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2057815488]
 

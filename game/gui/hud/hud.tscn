@@ -27,6 +27,7 @@
 [ext_resource type="Texture2D" uid="uid://drqejn7bu02ds" path="res://assets/sprites/Stat_energiya_01.png" id="12_n2uio"]
 [ext_resource type="Texture2D" uid="uid://kqcobnfk3s3t" path="res://assets/sprites/Stat_option_01.png" id="13_7as1x"]
 [ext_resource type="Texture2D" uid="uid://cqrew0vvphtcp" path="res://assets/sprites/Btn_combo_01.png" id="13_j6530"]
+[ext_resource type="Script" uid="uid://5p2p1pbkpqbn" path="res://game/gui/counters/kill_counter.gd" id="14_2wicm"]
 [ext_resource type="Texture2D" uid="uid://c8qxpu8d7rn35" path="res://assets/sprites/Stat_enemy_01.png" id="14_7hu2p"]
 [ext_resource type="Script" uid="uid://by2fn083qmnqh" path="res://game/gui/charge_button/dodge_button.gd" id="17_vp4r6"]
 
@@ -301,24 +302,25 @@ offset_transform_enabled = true
 offset_transform_position = Vector2(47, -13)
 texture_normal = ExtResource("13_7as1x")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer" unique_id=658361671]
+[node name="KillCounter" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer" unique_id=658361671]
 layout_mode = 2
 size_flags_horizontal = 8
 offset_transform_enabled = true
 offset_transform_position = Vector2(0, -4)
+script = ExtResource("14_2wicm")
 
-[node name="EnemyDeathIcon" type="TextureRect" parent="VBoxContainer/Top/StatsSettingsDeathContainer/HBoxContainer" unique_id=1492118410]
+[node name="KillCounterIcon" type="TextureRect" parent="VBoxContainer/Top/StatsSettingsDeathContainer/KillCounter" unique_id=1492118410]
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_horizontal = 3
 size_flags_vertical = 8
 offset_transform_enabled = true
 offset_transform_position = Vector2(65, 1)
 texture = ExtResource("14_7hu2p")
 
-[node name="EnemyDeathLabel" type="Label" parent="VBoxContainer/Top/StatsSettingsDeathContainer/HBoxContainer" unique_id=1546875009]
+[node name="KillCounterLabel" type="Label" parent="VBoxContainer/Top/StatsSettingsDeathContainer/KillCounter" unique_id=1546875009]
 modulate = Color(0.8, 0.8, 0.8, 1)
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_horizontal = 10
 size_flags_vertical = 8
 offset_transform_enabled = true
 offset_transform_position = Vector2(63, 6)
