@@ -37,7 +37,7 @@ animations = [{
 "texture": ExtResource("3_eb48s")
 }],
 "loop": 0,
-"name": &"combo_attack_1",
+"name": &"combo_attack_0",
 "speed": 10.0
 }, {
 "frames": [{
@@ -51,7 +51,7 @@ animations = [{
 "texture": ExtResource("5_i7ngm")
 }],
 "loop": 0,
-"name": &"combo_attack_2",
+"name": &"combo_attack_1",
 "speed": 10.0
 }, {
 "frames": [{
@@ -107,5 +107,27 @@ animations = [{
 }],
 "loop": 0,
 "name": &"prepare",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_40e10")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_mc1ol")
+}],
+"loop": 0,
+"name": &"shot",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_7yay0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_eb48s")
+}],
+"loop": 0,
+"name": &"shot_price",
 "speed": 10.0
 }]

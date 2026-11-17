@@ -4,7 +4,32 @@
 [ext_resource type="Script" uid="uid://cv1jon4lg46oi" path="res://assets/resources/weapons/weapon.gd" id="1_8oh8g"]
 [ext_resource type="Resource" uid="uid://bdnmwdisr2oo3" path="res://assets/resources/abilities/default_knife_attack.tres" id="2_yg7q6"]
 
+[sub_resource type="Resource" id="Resource_combo_attack_1"]
+script = ExtResource("1_5ya5j")
+name = &"combo_attack"
+animation_name = &"combo_attack"
+animation_variants = 2
+ap_need = 5.0
+ap_delta = -5.0
+metadata/_custom_type_script = "uid://c3g6v8v2ngmp3"
+
+[sub_resource type="Resource" id="Resource_shot_price"]
+script = ExtResource("1_5ya5j")
+name = &"shot_price"
+animation_name = &"shot_price"
+ap_need = 3.0
+ap_delta = -3.0
+metadata/_custom_type_script = "uid://c3g6v8v2ngmp3"
+
+[sub_resource type="Resource" id="Resource_shot"]
+script = ExtResource("1_5ya5j")
+name = &"shot"
+animation_name = &"shot"
+ap_need = 2.0
+ap_delta = -2.0
+metadata/_custom_type_script = "uid://c3g6v8v2ngmp3"
+
 [resource]
 script = ExtResource("1_8oh8g")
 name = &"Knife"
-abilities = Array[ExtResource("1_5ya5j")]([ExtResource("2_yg7q6")])
+abilities = Array[ExtResource("1_5ya5j")]([ExtResource("2_yg7q6"), SubResource("Resource_combo_attack_1"), SubResource("Resource_shot_price"), SubResource("Resource_shot")])

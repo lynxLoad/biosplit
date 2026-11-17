@@ -551,9 +551,9 @@ grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(-10, -11)
 offset_transform_visual_only = false
-value = 100.0
 fill_mode = 3
 texture_progress = ExtResource("9_mcaty")
+script = ExtResource("17_vp4r6")
 
 [node name="ShotBackground" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer" unique_id=213795259]
 layout_mode = 2
@@ -580,9 +580,9 @@ grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(-8, -11)
 offset_transform_visual_only = false
-value = 100.0
 fill_mode = 3
 texture_progress = ExtResource("11_bxppj")
+script = ExtResource("17_vp4r6")
 
 [node name="ComboAttackContainer" type="VBoxContainer" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer" unique_id=1195072273]
 layout_mode = 2
@@ -612,11 +612,11 @@ grow_horizontal = 2
 grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(0, 1)
-value = 100.0
 fill_mode = 3
 texture_progress = ExtResource("13_j6530")
+script = ExtResource("17_vp4r6")
 
-[node name="BlockButton" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=1187534755]
+[node name="AttackButton" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=1187534755]
 layout_mode = 2
 size_flags_vertical = 10
 offset_transform_enabled = true

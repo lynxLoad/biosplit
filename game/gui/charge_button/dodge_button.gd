@@ -23,6 +23,7 @@ var _cooldown_until: float = 0.0
 func _ready() -> void:
 	super._ready()
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	value_changed.connect(_on_value_changed)
 	_refresh_visual()
 
 func snap_to(v: float) -> void:
@@ -39,6 +40,9 @@ func is_ready() -> bool:
 
 func _refresh_visual() -> void:
 	modulate = enabled_modulate if is_ready() else disabled_modulate
+
+func _on_value_changed(_value: float) -> void:
+	_refresh_visual()
 
 func _gui_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton):

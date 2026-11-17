@@ -66,6 +66,6 @@ z_attack_priority = 2000
 z_index = 1
 material = SubResource("ShaderMaterial_gf2du")
 sprite_frames = ExtResource("1_yjtv7")
-animation = &"prepare"
+animation = &"shot_price"
 speed_scale = 1.5
 offset = Vector2(0, -69)
