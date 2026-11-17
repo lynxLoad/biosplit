@@ -46,6 +46,7 @@ func _spawn_all() -> void:
 	arena.add_child(player)
 	player.global_position = player_spawn
 	player.reset_idle_point()
+	AudioManager.track_character(player)
 	player.retreat_started.connect(_on_player_retreat_started)
 	var initial := mini(enemy_spawns.size(), total_enemies)
 	for i in initial:
@@ -59,6 +60,7 @@ func _spawn_enemy_at(pos: Vector2, fade_in: bool) -> CharacterBase:
 	arena.add_child(e)
 	e.global_position = pos
 	e.reset_idle_point()
+	AudioManager.track_character(e)
 	if is_instance_valid(player):
 		e.set_attack_target(player)
 	e.died.connect(_on_enemy_died.bind(e))

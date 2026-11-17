@@ -13,6 +13,7 @@ signal dodge_started
 signal attack_dodged(amount: float)
 signal attack_missed
 signal ap_changed(current: float, delta: float)
+signal attack_started(ability: Ability)
 
 enum State { IDLE, MOVING_TO_IDLE, ATTACKING, RETREATING, BLOCKING, DODGING, HIT, DEAD }
 enum HitShakePreset { LIGHT, MEDIUM, HEAVY, CRITICAL, JAB, MAGIC, BLOCK_HIT, CUSTOM, NONE }
@@ -411,6 +412,7 @@ func attack(enemy: CharacterBase, ability: Ability = null) -> void:
 	# ── анимация атаки с первого кадра ──
 	var attack_anim := _resolve_attack_anim(ability)
 	_play_anim(attack_anim)
+	attack_started.emit(ability)
 	_play_attack_lunge(dir)
 
 	# ── удар — сразу на первом кадре атаки ──
@@ -734,7 +736,7 @@ func play_block_reaction(amount: float, from_position: Vector2 = Vector2.INF) ->
 	if _state == State.DEAD:
 		return
 	_play_anim(ANIM_BLOCK)
-	hit_blocked.emit()
+	hit_blocked.emit(amount)
 	_flash(block_flash_color, block_flash_in_duration, block_flash_out_duration)
 	_play_hit_shake(from_position, block_shake_distance, HitShakePreset.BLOCK_HIT)
 	if block_recoil_distance > 0.0:
