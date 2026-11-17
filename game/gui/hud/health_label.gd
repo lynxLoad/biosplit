@@ -25,7 +25,7 @@ extends Label
 @export_group("Low HP")
 @export_range(0.0, 1.0, 0.01) var low_hp_threshold: float = 0.25
 @export var low_hp_pulse_speed: float = 5.0
-@export_range(0.0, 1.0, 0.01) var low_hp_pulse_amount: float = 0.2
+@export_range(0.0, 1.0, 0.01) var low_hp_pulse_amount: float = 0.0
 
 var _player: CharacterBase
 
