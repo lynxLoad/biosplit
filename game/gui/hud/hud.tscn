@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bn4sok1txq3ek" path="res://assets/sprites/Stat_levl_01.png" id="2_uahol"]
 [ext_resource type="Texture2D" uid="uid://bdmv3fq6wss7d" path="res://assets/sprites/Stat_exit_01.png" id="3_bxppj"]
 [ext_resource type="Texture2D" uid="uid://bgkr8kvgy0d5n" path="res://assets/sprites/Stat_bar_helth_01.png" id="3_j6530"]
+[ext_resource type="Script" uid="uid://dcky8npd50vlq" path="res://game/gui/hud/health_label.gd" id="3_ol5rs"]
 [ext_resource type="Texture2D" uid="uid://bdj0c5v2a0jei" path="res://assets/sprites/Btn_block_01.png" id="3_ro7r5"]
 [ext_resource type="Texture2D" uid="uid://d4ip84e6mr72p" path="res://assets/sprites/Stat_bar_helth_02.png" id="4_gw8ep"]
 [ext_resource type="Texture2D" uid="uid://b7bmamuekg5hv" path="res://assets/sprites/Btn_inventory_02.png" id="4_t067d"]
@@ -120,6 +121,7 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 18
 text = "100"
 horizontal_alignment = 2
+script = ExtResource("3_ol5rs")
 
 [node name="HealthBar" type="TextureProgressBar" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=1894885132]
 visible = false
