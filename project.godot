@@ -20,6 +20,7 @@ DCKit="*uid://g1vgmlrh22q"
 PauseManager="*uid://cd20rjrrctdth"
 DcKitManager="*uid://bv4u7w6pxiwn1"
 Console="*uid://ck00brbmqjkwj"
+AudioManager="*res://game/management/audio_manager.gd"
 
 [display]
 
