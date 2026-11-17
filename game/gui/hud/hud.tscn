@@ -34,7 +34,7 @@
 [ext_resource type="Texture2D" uid="uid://c8qxpu8d7rn35" path="res://assets/sprites/Stat_enemy_01.png" id="14_7hu2p"]
 [ext_resource type="Script" uid="uid://by2fn083qmnqh" path="res://game/gui/charge_button/dodge_button.gd" id="17_vp4r6"]
 
-[node name="HUD" type="Control" unique_id=1803910719]
+[node name="HUD" type="Control" unique_id=1803910719 groups=["hud"]]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -123,14 +123,7 @@ text = "100"
 horizontal_alignment = 2
 script = ExtResource("3_ol5rs")
 
-[node name="HealthBar" type="TextureProgressBar" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=1894885132]
-visible = false
-layout_mode = 2
-value = 100.0
-texture_under = ExtResource("3_j6530")
-texture_progress = ExtResource("4_gw8ep")
-
-[node name="Control" type="Control" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=1706404704]
+[node name="HealhBar" type="Control" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=1706404704]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
@@ -138,7 +131,7 @@ offset_transform_enabled = true
 offset_transform_position = Vector2(0, 3)
 script = ExtResource("5_skoql")
 
-[node name="Under" type="TextureRect" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer/Control" unique_id=1710629854]
+[node name="Under" type="TextureRect" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer/HealhBar" unique_id=1710629854]
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
@@ -147,7 +140,7 @@ grow_vertical = 2
 texture = ExtResource("3_j6530")
 stretch_mode = 2
 
-[node name="Progress" type="TextureProgressBar" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer/Control" unique_id=505715646]
+[node name="Progress" type="TextureProgressBar" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer/HealhBar" unique_id=505715646]
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0

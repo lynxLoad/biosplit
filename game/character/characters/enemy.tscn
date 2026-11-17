@@ -26,8 +26,9 @@ animation = &"hand_attack"
 offset = Vector2(0, -69)
 
 [node name="HealthBar" parent="." unique_id=210445443 instance=ExtResource("3_tf3l0")]
-offset_left = -52.0
-offset_top = -192.0
-offset_right = 73.0
-offset_bottom = -177.0
+offset_left = -62.0
+offset_top = -188.0
+offset_right = 63.0
+offset_bottom = -173.0
 script = ExtResource("6_lg8fk")
+trail_speed = 6.0
