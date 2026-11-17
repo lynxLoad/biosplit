@@ -56,8 +56,10 @@ weapon = ExtResource("3_65114")
 hitstop_base_duration = 0.3
 block_hitstop_time_scale = 0.1
 block_hitstop_base_duration = 0.1
+dodge_hitstop_enabled = false
 dodge_hitstop_time_scale = 0.1
 dodge_hitstop_base_duration = 0.3
+death_hitstop_enabled = false
 z_attack_priority = 2000
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=356963692]
@@ -65,12 +67,5 @@ z_index = 1
 material = SubResource("ShaderMaterial_gf2du")
 sprite_frames = ExtResource("1_yjtv7")
 animation = &"prepare"
-offset = Vector2(0, -69)
-
-[node name="AnimatedSprite2D2" type="AnimatedSprite2D" parent="." unique_id=266029740]
-visible = false
-z_index = 1
-material = SubResource("ShaderMaterial_gf2du")
-sprite_frames = ExtResource("1_yjtv7")
-animation = &"default_knife_attack_0"
+speed_scale = 1.5
 offset = Vector2(0, -69)

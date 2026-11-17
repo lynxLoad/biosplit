@@ -11,8 +11,10 @@
 [ext_resource type="Texture2D" uid="uid://b7bmamuekg5hv" path="res://assets/sprites/Btn_inventory_02.png" id="4_t067d"]
 [ext_resource type="Texture2D" uid="uid://dqad73eyr8t1c" path="res://assets/sprites/Btn_inventory_01.png" id="5_4hsb8"]
 [ext_resource type="Texture2D" uid="uid://d1wdqiyp5j68u" path="res://assets/sprites/Stat_bar_expa_01.png" id="5_6mr7h"]
+[ext_resource type="Script" uid="uid://d0v4n4poesqo" path="res://game/gui/bar/player_health_bar.gd" id="5_skoql"]
 [ext_resource type="Texture2D" uid="uid://c1kp4w1yyygk7" path="res://assets/sprites/Stat_bar_expa_02.png" id="6_qmnqy"]
 [ext_resource type="Texture2D" uid="uid://dd6jkyi4ttst3" path="res://assets/sprites/Btn_granata_01.png" id="6_wdmrr"]
+[ext_resource type="Script" uid="uid://bufgl6ojy0stf" path="res://game/gui/bar/smooth_bar.gd" id="6_yiee4"]
 [ext_resource type="Texture2D" uid="uid://7vb8q7rlooai" path="res://assets/sprites/Btn_apteka_01.png" id="7_810x0"]
 [ext_resource type="Texture2D" uid="uid://hrjminbhnudu" path="res://assets/sprites/Btn_shot_pricel_02.png" id="8_lduh1"]
 [ext_resource type="Texture2D" uid="uid://cq8ucgf1as6tu" path="res://assets/sprites/Btn_attack_01.png" id="8_ncn3r"]
@@ -120,15 +122,46 @@ text = "100"
 horizontal_alignment = 2
 
 [node name="HealthBar" type="TextureProgressBar" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=1894885132]
+visible = false
 layout_mode = 2
 value = 100.0
 texture_under = ExtResource("3_j6530")
 texture_progress = ExtResource("4_gw8ep")
 
+[node name="Control" type="Control" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=1706404704]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, 3)
+script = ExtResource("5_skoql")
+
+[node name="Under" type="TextureRect" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer/Control" unique_id=1710629854]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 197.0
+grow_vertical = 2
+texture = ExtResource("3_j6530")
+stretch_mode = 2
+
+[node name="Progress" type="TextureProgressBar" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer/Control" unique_id=505715646]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_top = -3.0
+offset_right = 197.0
+offset_bottom = 3.0
+grow_vertical = 2
+value = 100.0
+texture_progress = ExtResource("4_gw8ep")
+script = ExtResource("6_yiee4")
+metadata/_custom_type_script = "uid://bufgl6ojy0stf"
+
 [node name="ExpBar" type="TextureProgressBar" parent="VBoxContainer/Top/ParamsRunContainer/ParamsContainer/HealthExpBarsContainer" unique_id=2039429960]
 layout_mode = 2
 offset_transform_enabled = true
-offset_transform_position = Vector2(0, -1)
+offset_transform_position = Vector2(0, 5)
 value = 100.0
 texture_under = ExtResource("5_6mr7h")
 texture_progress = ExtResource("6_qmnqy")

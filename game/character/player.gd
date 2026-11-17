@@ -3,7 +3,7 @@ class_name Player
 
 signal screen_shake_requested(intensity: float, duration: float)
 
-const PLAYER_GROUP := &"player"
+const PLAYER_GROUP = &"player"
 const DODGE_ANIM := &"dodge"
 
 # ── Dash afterimage (ghost trail) ──

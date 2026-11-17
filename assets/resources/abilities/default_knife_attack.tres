@@ -7,4 +7,5 @@ script = ExtResource("1_n121y")
 name = &"default_knife"
 animation_name = &"default_knife_attack"
 animation_variants = 2
+damage = 5.0
 metadata/_custom_type_script = "uid://c3g6v8v2ngmp3"

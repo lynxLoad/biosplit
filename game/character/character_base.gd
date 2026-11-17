@@ -3,6 +3,7 @@ class_name CharacterBase
 
 signal turn_finished
 signal damaged(amount: float)
+signal healed(amount: float)   # ← новый
 signal died
 signal retreat_started
 signal block_started
@@ -512,7 +513,10 @@ func move_to_idle_point(duration: float = 0.3) -> void:
 func heal(amount: float) -> void:
 	if _state == State.DEAD or amount <= 0.0:
 		return
+	var old := health
 	health = minf(character_stats.max_health, health + amount)
+	if not is_equal_approx(health, old):
+		healed.emit(health - old)
 
 # ── ability selection ──
 

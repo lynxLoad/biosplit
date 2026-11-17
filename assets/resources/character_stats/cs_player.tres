@@ -5,6 +5,5 @@
 [resource]
 script = ExtResource("1_nmx55")
 name = &"Player"
-max_health = 9999.0
 block_damage_reduction = 999.0
 block_chance = 1.0

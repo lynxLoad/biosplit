@@ -28,6 +28,7 @@ var _base_scale: Vector2
 var _base_pos: Vector2
 var _base_size: Vector2
 var _pulse_time: float = 0.0
+var _shake_origin: Vector2
 
 func _ready() -> void:
 	_target = _progress.value
@@ -55,8 +56,8 @@ func setup(current: float, maximum: float) -> void:
 	if _trail:
 		_trail.snap_to(_target)
 	scale = _base_scale
-	position = _base_pos
-	size = _base_size
+	#position = _base_pos
+	#size = _base_size
 	modulate.a = 1.0
 	_progress.self_modulate = Color.WHITE
 	_pulse_time = 0.0
@@ -106,17 +107,37 @@ func _punch(to_mult: float, trans: Tween.TransitionType, duration: float) -> voi
 # --- Shake ---
 
 func _shake() -> void:
+	# Если предыдущая тряска ещё идёт — возвращаем исходную позицию.
 	if _shake_tween and _shake_tween.is_valid():
 		_shake_tween.kill()
+		position = _shake_origin
+
+	# Запоминаем актуальную позицию прямо перед тряской.
+	_shake_origin = position
+
 	_shake_tween = create_tween().set_trans(Tween.TRANS_SINE)
+
 	var steps := 5
+
 	for i in steps:
 		var strength := shake_pixels * (1.0 - float(i) / steps)
-		_shake_tween.tween_property(self, "position", _base_pos + Vector2(
-			randf_range(-strength, strength),
-			randf_range(-strength * 0.4, strength * 0.4)
-		), shake_time / steps)
-	_shake_tween.tween_property(self, "position", _base_pos, shake_time / steps)
+
+		_shake_tween.tween_property(
+			self,
+			"position",
+			_shake_origin + Vector2(
+				randf_range(-strength, strength),
+				randf_range(-strength * 0.4, strength * 0.4)
+			),
+			shake_time / steps
+		)
+
+		_shake_tween.tween_property(
+			self,
+			"position",
+			_shake_origin,
+			shake_time / steps
+		)
 
 # --- Low HP pulse ---
 
