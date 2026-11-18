@@ -1,7 +1,7 @@
 extends Node
 
 const SAMPLE_RATE := 22050
-const PITCH_SCALE := 0.75
+const PITCH_SCALE := 0.65
 # Процедурная генерация здесь — временная заглушка; позже замените её готовыми звуковыми эффектами.
 const SOUND_PRESETS := {
 	&"attack": [0.16, 620.0, 170.0, 0.18, 0.28, 1.4, -5.0],
@@ -16,6 +16,9 @@ const SOUND_PRESETS := {
 
 var _stream_cache: Dictionary = {}
 var _tracked_characters: Dictionary = {}
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 
 func track_character(character: CharacterBase) -> void:
 	if not is_instance_valid(character):
