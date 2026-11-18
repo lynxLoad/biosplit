@@ -26,7 +26,7 @@ extends Node
 @export var z_other_enemy: int = 0
 @export var z_dying_first: int = 100
 
-@onready var arena: Node2D = get_parent()
+@onready var arena: Control = get_parent()
 
 var player: Player
 var enemies: Array[CharacterBase] = []
