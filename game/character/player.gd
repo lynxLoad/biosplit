@@ -249,10 +249,9 @@ func _connect_hud_buttons() -> void:
 	if dodge_button:
 		dodge_button.pressed.connect(_try_dodge)
 
-	var attack_button := hud.find_child("AttackButton", true, false) as TextureRect
+	var attack_button := hud.find_child("AttackButton", true, false) as TextureButton
 	if attack_button:
-		attack_button.mouse_filter = Control.MOUSE_FILTER_STOP
-		attack_button.gui_input.connect(_on_attack_button_gui_input.bind(attack_button))
+		attack_button.pressed.connect(_try_attack)
 
 	for button_name in [&"ComboButton", &"ShotPriceButton", &"ShotButton"]:
 		var button := hud.find_child(String(button_name), true, false) as ChargeButton
@@ -278,15 +277,6 @@ func _connect_hud_buttons() -> void:
 			ability_index += 1
 
 	_update_paid_ability_charges()
-
-func _on_attack_button_gui_input(event: InputEvent, button: Control) -> void:
-	if not (event is InputEventMouseButton):
-		return
-	var mouse_event := event as InputEventMouseButton
-	if mouse_event.button_index != MOUSE_BUTTON_LEFT or not mouse_event.pressed:
-		return
-	button.accept_event()
-	_try_attack()
 
 func _on_block_button_down() -> void:
 	_block_button_held = true

@@ -32,7 +32,8 @@
 [ext_resource type="Texture2D" uid="uid://cqrew0vvphtcp" path="res://assets/sprites/Btn_combo_01.png" id="13_j6530"]
 [ext_resource type="Script" uid="uid://5p2p1pbkpqbn" path="res://game/gui/counters/kill_counter.gd" id="14_2wicm"]
 [ext_resource type="Texture2D" uid="uid://c8qxpu8d7rn35" path="res://assets/sprites/Stat_enemy_01.png" id="14_7hu2p"]
-[ext_resource type="Script" uid="uid://by2fn083qmnqh" path="res://game/gui/charge_button/dodge_button.gd" id="17_vp4r6"]
+[ext_resource type="Script" uid="uid://blddoruaixtdi" path="res://game/gui/button_feedback.gd" id="15_button_feedback"]
+[ext_resource type="Script" uid="uid://by2fn083qmnqh" path="res://game/gui/charge_button/charge_button.gd" id="17_vp4r6"]
 
 [node name="HUD" type="Control" unique_id=1803910719 groups=["hud"]]
 layout_mode = 3
@@ -175,6 +176,7 @@ size_flags_horizontal = 0
 offset_transform_enabled = true
 offset_transform_position = Vector2(2, 8)
 texture_normal = ExtResource("3_bxppj")
+script = ExtResource("15_button_feedback")
 
 [node name="DebuffContainer" type="HBoxContainer" parent="VBoxContainer/Top" unique_id=750633468]
 layout_mode = 2
@@ -337,6 +339,7 @@ size_flags_vertical = 0
 offset_transform_enabled = true
 offset_transform_position = Vector2(47, -13)
 texture_normal = ExtResource("13_7as1x")
+script = ExtResource("15_button_feedback")
 
 [node name="KillCounter" type="HBoxContainer" parent="VBoxContainer/Top/StatsSettingsDeathContainer" unique_id=658361671]
 layout_mode = 2
@@ -370,6 +373,7 @@ theme_override_font_sizes/font_size = 14
 text = "x2"
 
 [node name="Bottom" type="MarginContainer" parent="VBoxContainer" unique_id=1456187833]
+process_mode = 3
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 35
@@ -432,6 +436,9 @@ offset_transform_enabled = true
 offset_transform_position = Vector2(22.5, 0)
 offset_transform_visual_only = false
 texture_normal = ExtResource("3_ro7r5")
+script = ExtResource("15_button_feedback")
+press_animation_mode = 1
+press_scale = 0.9
 
 [node name="InventoryBackground" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1783142740]
 layout_mode = 2
@@ -469,6 +476,7 @@ offset_transform_enabled = true
 offset_transform_position = Vector2(0, -4)
 offset_transform_visual_only = false
 texture_normal = ExtResource("6_wdmrr")
+script = ExtResource("15_button_feedback")
 
 [node name="CountLabel" type="Label" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/GranataButton" unique_id=490434633]
 modulate = Color(0.7411765, 0.7411765, 0.7411765, 1)
@@ -501,6 +509,7 @@ offset_transform_enabled = true
 offset_transform_position = Vector2(0, -4)
 offset_transform_visual_only = false
 texture_normal = ExtResource("7_810x0")
+script = ExtResource("15_button_feedback")
 
 [node name="CountLabel" type="Label" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AptekaButton" unique_id=1257616831]
 modulate = Color(0.7411765, 0.7411765, 0.7411765, 1)
@@ -616,10 +625,11 @@ fill_mode = 3
 texture_progress = ExtResource("13_j6530")
 script = ExtResource("17_vp4r6")
 
-[node name="AttackButton" type="TextureRect" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=1187534755]
+[node name="AttackButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=1507974520]
 layout_mode = 2
 size_flags_vertical = 10
 offset_transform_enabled = true
 offset_transform_position = Vector2(-22.5, 0)
 offset_transform_visual_only = false
-texture = ExtResource("8_ncn3r")
+texture_normal = ExtResource("8_ncn3r")
+script = ExtResource("15_button_feedback")
