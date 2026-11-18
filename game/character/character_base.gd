@@ -324,6 +324,9 @@ func get_max_health() -> float:
 func set_z_priority(priority: int) -> void:
 	z_index = priority
 
+func set_z_attack_priority(priority: int) -> void:
+	z_attack_priority = priority
+
 func get_block_damage_reduction() -> float:
 	return maxf(0.0, character_stats.block_damage_reduction) if character_stats else 0.0
 
@@ -370,7 +373,6 @@ func attack(enemy: CharacterBase, ability: Ability = null) -> void:
 	_state = State.ATTACKING
 	target = enemy
 	_z_before_attack = z_index
-	z_index = z_attack_priority
 
 	var start := global_position
 	var anchor := _resolve_strike_anchor(enemy)
@@ -411,6 +413,7 @@ func attack(enemy: CharacterBase, ability: Ability = null) -> void:
 
 	# ── анимация атаки с первого кадра ──
 	var attack_anim := _resolve_attack_anim(ability)
+	z_index = z_attack_priority
 	_play_anim(attack_anim)
 	attack_started.emit(ability)
 	_play_attack_lunge(dir)
@@ -432,6 +435,7 @@ func attack(enemy: CharacterBase, ability: Ability = null) -> void:
 	# ── отход ──
 	retreat_started.emit()
 	_state = State.RETREATING
+	z_index = _z_before_attack
 	var retreat_time := clampf(
 		global_position.distance_to(idle_point) / speed_px,
 		min_phase_duration, max_phase_duration

@@ -30,6 +30,9 @@ signal milestone_reached(value: int)
 @export var icon_bounce_distance: float = 5.0
 @export var icon_bounce_time: float = 0.25
 
+@export_group("Number Animation")
+@export var number_roll_distance: float = 8.0
+@export var number_roll_time: float = 0.18
 
 @export_group("Combo Juice")
 @export var combo_punch_bonus: float = 0.025
@@ -55,13 +58,17 @@ var _fade_tween: Tween
 var _flash_tween: Tween
 var _punch_tween: Tween
 var _icon_tween: Tween
+var _number_tween: Tween
 
 var _base_icon_offset: Vector2
+var _base_label_offset_position: Vector2
 var _base_label_offset_scale: Vector2
+var _displayed_value: float = 0.0
 
 
 func _ready() -> void:
 	_base_icon_offset = kill_counter_icon.offset_transform_position
+	_base_label_offset_position = kill_counter_label.offset_transform_position
 	_base_label_offset_scale = kill_counter_label.offset_transform_scale
 
 	modulate.a = 0.0
@@ -69,6 +76,7 @@ func _ready() -> void:
 
 	kill_counter_label.modulate = base_color
 	kill_counter_icon.modulate = base_color
+	kill_counter_label.text = "x0"
 
 	_hook_existing_enemies()
 	get_tree().node_added.connect(_on_node_added)
@@ -161,7 +169,7 @@ func _refresh_visual() -> void:
 	visible = true
 	modulate.a = 1.0
 
-	kill_counter_label.text = "x%d" % value
+	_animate_number(value)
 
 	var is_milestone := value in milestone_values
 
@@ -245,6 +253,26 @@ func _punch(multiplier: float, duration: float) -> void:
 		duration * 0.75
 	).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
+func _animate_number(value: int) -> void:
+	_kill_tween(_number_tween)
+	kill_counter_label.offset_transform_position = (
+		_base_label_offset_position + Vector2(0.0, number_roll_distance)
+	)
+	_number_tween = create_tween().set_parallel(true)
+	_number_tween.tween_method(
+		_set_displayed_value, _displayed_value, float(value), number_roll_time
+	).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_number_tween.tween_property(
+		kill_counter_label,
+		"offset_transform_position",
+		_base_label_offset_position,
+		number_roll_time
+	).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _set_displayed_value(value: float) -> void:
+	_displayed_value = value
+	kill_counter_label.text = "x%d" % roundi(value)
+
 
 # ── Icon Bounce ─────────────────────────────────────────────
 
@@ -269,7 +297,6 @@ func _bounce_icon() -> void:
 		icon_bounce_time * 0.65
 	)
 
-
 # ── Combo Reset ─────────────────────────────────────────────
 
 func _reset_combo() -> void:
@@ -278,6 +305,9 @@ func _reset_combo() -> void:
 
 	_combo = 0
 	_combo_time_left = 0.0
+	_kill_tween(_number_tween)
+	_number_tween = null
+	_displayed_value = 0.0
 
 	_kill_tween(_fade_tween)
 
@@ -325,13 +355,17 @@ func reset() -> void:
 	_kill_tween(_flash_tween)
 	_kill_tween(_punch_tween)
 	_kill_tween(_icon_tween)
+	_kill_tween(_number_tween)
 
 	_fade_tween = null
 	_flash_tween = null
 	_punch_tween = null
 	_icon_tween = null
+	_number_tween = null
+	_displayed_value = 0.0
 
 	kill_counter_icon.offset_transform_position = _base_icon_offset
+	kill_counter_label.offset_transform_position = _base_label_offset_position
 	kill_counter_label.offset_transform_scale = _base_label_offset_scale
 
 	kill_counter_label.text = "x0"

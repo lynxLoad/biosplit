@@ -171,6 +171,7 @@ texture_under = ExtResource("5_6mr7h")
 texture_progress = ExtResource("6_qmnqy")
 
 [node name="RunButton" type="TextureButton" parent="VBoxContainer/Top/ParamsRunContainer" unique_id=1293912298]
+process_mode = 3
 layout_mode = 2
 size_flags_horizontal = 0
 offset_transform_enabled = true
@@ -330,6 +331,7 @@ offset_transform_enabled = true
 offset_transform_position = Vector2(25, 13)
 
 [node name="SettingsButton" type="TextureButton" parent="VBoxContainer/Top/StatsSettingsDeathContainer/StatsSettingsContainer/Control" unique_id=2120691412]
+process_mode = 3
 layout_mode = 0
 offset_left = -28.0
 offset_right = -9.0
@@ -407,6 +409,7 @@ offset_transform_visual_only = false
 texture = ExtResource("1_7td45")
 
 [node name="DodgeButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockInvContainer/DodgeBackground" unique_id=1576145507]
+process_mode = 3
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -429,6 +432,7 @@ script = ExtResource("17_vp4r6")
 ready_threshold = 0.1
 
 [node name="BlockButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockInvContainer" unique_id=1592513928]
+process_mode = 3
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
@@ -450,6 +454,7 @@ offset_transform_visual_only = false
 texture = ExtResource("4_t067d")
 
 [node name="InventoryButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/InventoryBackground" unique_id=896535330]
+process_mode = 3
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -470,6 +475,7 @@ fill_mode = 3
 texture_progress = ExtResource("5_4hsb8")
 
 [node name="GranataButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer" unique_id=1683952240]
+process_mode = 3
 layout_mode = 2
 size_flags_vertical = 8
 offset_transform_enabled = true
@@ -502,6 +508,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="AptekaButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight" unique_id=1187542348]
+process_mode = 3
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
@@ -545,6 +552,7 @@ offset_transform_visual_only = false
 texture = ExtResource("8_lduh1")
 
 [node name="ShotPriceButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ShotPriceBackground" unique_id=509993351]
+process_mode = 3
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -574,6 +582,7 @@ offset_transform_visual_only = false
 texture = ExtResource("10_uahol")
 
 [node name="ShotButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ShotBackground" unique_id=2141368591]
+process_mode = 3
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -607,6 +616,7 @@ offset_transform_visual_only = false
 texture = ExtResource("12_k3a5d")
 
 [node name="ComboButton" type="TextureProgressBar" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer/ComboBackground" unique_id=620991644]
+process_mode = 3
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -626,6 +636,7 @@ texture_progress = ExtResource("13_j6530")
 script = ExtResource("17_vp4r6")
 
 [node name="AttackButton" type="TextureButton" parent="VBoxContainer/Bottom/HBoxContainer/BottomRight/AttackContainer/ComboAttackContainer" unique_id=1507974520]
+process_mode = 3
 layout_mode = 2
 size_flags_vertical = 10
 offset_transform_enabled = true

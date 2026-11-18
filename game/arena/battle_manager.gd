@@ -25,6 +25,8 @@ extends Node
 @export var z_first_enemy: int = 10
 @export var z_other_enemy: int = 0
 @export var z_dying_first: int = 100
+@export var z_enemy_attack_priority: int = 2001
+@export var z_slot_priorities: Array[int] = [10, 0, 20]
 
 @onready var arena: Control = get_parent()
 
@@ -88,8 +90,12 @@ func _apply_z_order() -> void:
 		var e := enemies[i]
 		if not is_instance_valid(e):
 			continue
+		var enemy_z := z_other_enemy
+		if i < z_slot_priorities.size():
+			enemy_z = z_slot_priorities[i]
+		e.set_z_attack_priority(z_enemy_attack_priority)
 		if not e.is_attacking():
-			e.set_z_priority(z_first_enemy if i == 0 else z_other_enemy)
+			e.set_z_priority(enemy_z)
 		e.set_is_front(i == 0)
 
 func _on_enemy_died(enemy: CharacterBase) -> void:
