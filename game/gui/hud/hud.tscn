@@ -176,6 +176,7 @@ layout_mode = 2
 size_flags_horizontal = 0
 offset_transform_enabled = true
 offset_transform_position = Vector2(2, 8)
+offset_transform_visual_only = false
 texture_normal = ExtResource("3_bxppj")
 script = ExtResource("15_button_feedback")
 
@@ -598,6 +599,7 @@ grow_vertical = 2
 offset_transform_enabled = true
 offset_transform_position = Vector2(-8, -11)
 offset_transform_visual_only = false
+value = 100.0
 fill_mode = 3
 texture_progress = ExtResource("11_bxppj")
 script = ExtResource("17_vp4r6")

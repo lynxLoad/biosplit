@@ -53,13 +53,14 @@ player_scene = ExtResource("7_18ewb")
 enemy_scene = ExtResource("8_5qxpj")
 player_spawn = Vector2(330, 340)
 enemy_spawns = Array[Vector2]([Vector2(570, 340), Vector2(720, 305), Vector2(820, 355)])
-reflow_duration = 0.2
+reflow_duration = 0.15
 total_enemies = 18
 
 [node name="Background" type="Node2D" parent="." unique_id=1873647051]
-z_index = -4015
+z_index = -3000
 
 [node name="Parallax2D" type="Parallax2D" parent="Background" unique_id=1655981381]
+z_index = -2
 scroll_scale = Vector2(0.3, 0.3)
 
 [node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D" unique_id=1991461997]
@@ -72,6 +73,7 @@ region_enabled = true
 region_rect = Rect2(0, 0, 4000, 630)
 
 [node name="Parallax2D3" type="Parallax2D" parent="Background" unique_id=2023442318]
+z_index = -1
 
 [node name="Sprite2D" type="Sprite2D" parent="Background/Parallax2D3" unique_id=466596091]
 texture_filter = 1

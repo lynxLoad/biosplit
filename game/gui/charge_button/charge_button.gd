@@ -48,6 +48,7 @@ var _rot_tween: Tween
 var _mod_tween: Tween
 
 func _ready() -> void:
+	#smooth_speed = 20.0
 	super._ready()
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var mask_texture := texture_progress if texture_progress != null else texture_under
