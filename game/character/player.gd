@@ -2,6 +2,8 @@ extends CharacterBase
 class_name Player
 
 signal screen_shake_requested(intensity: float, duration: float)
+signal inventory_requested
+signal ap_delta_applied(delta: float)
 
 const PLAYER_GROUP = &"player"
 const DODGE_ANIM := &"dodge"
@@ -81,15 +83,10 @@ var enemies: Array[CharacterBase] = []
 var _attack_locked: bool = false
 var _attack_turn_active: bool = false
 var _block_held: bool = false
-var _block_button_held: bool = false
 var _dodge_active: bool = false
 var _queued_attack: bool = false
 var _queued_attack_ability: Ability
 var _queued_dodge: bool = false
-var _paid_ability_buttons: Array[ChargeButton] = []
-var _paid_abilities: Array[Ability] = []
-var _paid_ability_charge_ap: Array[float] = []
-var _charge_fallback_capacities: Array[float] = []
 
 var _block_aura: AnimatedSprite2D
 var _block_aura_tween: Tween
@@ -103,25 +100,11 @@ var _sprite_base_offset: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	super()
 	add_to_group(PLAYER_GROUP)
-	_connect_hud_buttons()
 	if animated_sprite:
 		_sprite_base_scale = animated_sprite.scale
 		_sprite_base_offset = animated_sprite.offset
 
 func _process(delta: float) -> void:
-	if Input.is_action_just_pressed(&"attack"):
-		_try_attack()
-	elif Input.is_action_just_pressed(&"dodge"):
-		_try_dodge()
-
-	if Input.is_action_pressed(&"block") or _block_button_held:
-		_block_held = true
-		_try_block()
-	elif _block_held:
-		_block_held = false
-		if _state == State.BLOCKING:
-			unblock()
-
 	_sync_block_aura()
 	_maybe_execute_queued_dodge()
 	_maybe_execute_queued_attack()
@@ -232,93 +215,20 @@ func set_attack_locked(value: bool) -> void:
 func _can_start_action() -> bool:
 	return not (_attack_locked or _attack_turn_active or _state == State.DEAD)
 
-func _connect_hud_buttons() -> void:
-	var hud_nodes := get_tree().get_nodes_in_group(&"hud")
-	if hud_nodes.is_empty():
-		return
-	var hud := hud_nodes[0]
-
-	var block_button := hud.get_node_or_null(
-		"VBoxContainer/Bottom/HBoxContainer/BottomLeft/HBoxContainer/DodgeBlockInvContainer/BlockButton"
-	) as TextureButton
-	if block_button:
-		block_button.button_down.connect(_on_block_button_down)
-		block_button.button_up.connect(_on_block_button_up)
-
-	var dodge_button := hud.find_child("DodgeButton", true, false) as ChargeButton
-	if dodge_button:
-		dodge_button.pressed.connect(_try_dodge)
-
-	var attack_button := hud.find_child("AttackButton", true, false) as TextureButton
-	if attack_button:
-		attack_button.pressed.connect(_try_attack)
-
-	for button_name in [&"ComboButton", &"ShotPriceButton", &"ShotButton"]:
-		var button := hud.find_child(String(button_name), true, false) as ChargeButton
-		if button:
-			var button_index := _paid_ability_buttons.size()
-			button.pressed.connect(_on_paid_ability_button_pressed.bind(button_index, button))
-			_paid_ability_buttons.append(button)
-			_charge_fallback_capacities.append(max_ap if button_name == &"ComboButton" else 0.0)
-
-	for _button in _paid_ability_buttons:
-		_paid_abilities.append(null)
-		_paid_ability_charge_ap.append(current_ap)
-
-	if weapon:
-		var ability_index := 0
-		for ability in weapon.abilities:
-			if ability == null or _is_free_ability(ability):
-				continue
-			if ability_index == _paid_ability_buttons.size():
-				break
-			_paid_abilities[ability_index] = ability
-			_paid_ability_charge_ap[ability_index] = current_ap
-			ability_index += 1
-
-	_update_paid_ability_charges()
-
-func _on_block_button_down() -> void:
-	_block_button_held = true
-	_block_held = true
-	_try_block()
-
-func _on_block_button_up() -> void:
-	_block_button_held = false
-	_block_held = Input.is_action_pressed(&"block")
-	if not _block_held and _state == State.BLOCKING:
+func set_block_held(held: bool) -> void:
+	_block_held = held
+	if held:
+		_try_block()
+	elif _state == State.BLOCKING:
 		unblock()
+
+func request_inventory() -> void:
+	inventory_requested.emit()
 
 func _apply_ap_delta(delta: float) -> void:
 	super(delta)
-	if is_zero_approx(delta):
-		return
-	for index in _paid_ability_buttons.size():
-		var required_ap := _get_paid_ability_charge_capacity(index)
-		_paid_ability_charge_ap[index] = clampf(
-			_paid_ability_charge_ap[index] + delta, 0.0, required_ap
-		)
-	_update_paid_ability_charges()
-
-func _update_paid_ability_charges() -> void:
-	for index in _paid_ability_buttons.size():
-		var button := _paid_ability_buttons[index]
-		var required_ap := _get_paid_ability_charge_capacity(index)
-		var charge := 0.0
-		if required_ap > 0.0:
-			charge = clampf(_paid_ability_charge_ap[index] / required_ap, 0.0, 1.0)
-		button.smooth_to(charge)
-
-func _get_paid_ability_charge_capacity(index: int) -> float:
-	var ability := _paid_abilities[index]
-	if ability == null:
-		return _charge_fallback_capacities[index]
-	return ability.ap_need
-
-func _on_paid_ability_button_pressed(button_index: int, button: ChargeButton) -> void:
-	if button_index < _paid_ability_charge_ap.size():
-		_paid_ability_charge_ap[button_index] = 0.0
-	button.smooth_to(0.0)
+	if not is_zero_approx(delta):
+		ap_delta_applied.emit(delta)
 
 func _is_free_ability(ability: Ability) -> bool:
 	return is_zero_approx(ability.ap_need) and ability.ap_delta >= 0.0
@@ -363,7 +273,7 @@ func _nearest_enemy() -> CharacterBase:
 
 # ── dodge ──
 
-func _try_dodge() -> void:
+func try_dodge() -> void:
 	if _state == State.DEAD:
 		return
 	_queued_attack = false
@@ -473,7 +383,7 @@ func _on_dodged_hit(amount: float, from_position: Vector2) -> void:
 
 # ── attack ──
 
-func _try_attack() -> void:
+func try_attack() -> void:
 	if _state == State.DEAD:
 		return
 	var ability := _get_free_attack_ability()

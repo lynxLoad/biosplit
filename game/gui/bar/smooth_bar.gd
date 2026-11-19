@@ -23,12 +23,15 @@ func snap_to(v: float) -> void:
 
 ## Плавно доехать.
 func smooth_to(v: float) -> void:
+	smooth_to_with_duration(v, maxf(0.05, 3.0 / smooth_speed))
+
+func smooth_to_with_duration(v: float, duration: float) -> void:
 	_target = clampf(v, min_value, max_value)
 	_kill_tween()
 	if is_equal_approx(value, _target):
 		return
 	_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_tween.tween_property(self, "value", _target, maxf(0.05, 3.0 / smooth_speed))
+	_tween.tween_property(self, "value", _target, maxf(0.05, duration))
 
 func _kill_tween() -> void:
 	if _tween and _tween.is_valid():

@@ -1,5 +1,7 @@
 extends Node
 
+const PlayerActionControllerScript = preload("res://game/character/player_action_controller.gd")
+
 @export var player_scene: PackedScene
 @export var enemy_scene: PackedScene
 
@@ -48,6 +50,11 @@ func _spawn_all() -> void:
 	arena.add_child(player)
 	player.global_position = player_spawn
 	player.reset_idle_point()
+	var hud := get_tree().get_first_node_in_group(&"hud") as Control
+	assert(hud != null, "BattleManager: HUD is missing")
+	var action_controller := PlayerActionControllerScript.new()
+	add_child(action_controller)
+	action_controller.setup(player, hud)
 	AudioManager.track_character(player)
 	player.retreat_started.connect(_on_player_retreat_started)
 	var initial := mini(enemy_spawns.size(), total_enemies)

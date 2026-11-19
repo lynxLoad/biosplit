@@ -7,9 +7,6 @@ extends Resource
 @export_group("Identity")
 @export var name: StringName = &""
 
-@export_group("Attack")
-@export_range(0, 64, 1, "or_greater") var animation_frame_attack: int = 0
-
 @export_group("Abilities")
 @export var abilities: Array[Ability] = []
 #endregion

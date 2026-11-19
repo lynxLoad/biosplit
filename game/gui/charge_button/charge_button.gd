@@ -12,9 +12,13 @@ signal button_up
 ## (только если require_full_to_press == true).
 signal press_failed
 
+@export var action_id: StringName = &""
+@export var input_action: StringName = &""
 @export_range(0.0, 1.0, 0.01) var ready_threshold: float = 1.0
 @export var require_full_to_press: bool = true
 @export var press_cooldown_sec: float = 0.15
+@export_range(0.0, 120.0, 0.1) var refill_time_sec: float = 0.0
+@export_range(0.05, 1.0, 0.01, "suffix:s") var reset_animation_duration_sec: float = 0.3
 
 @export var disabled_modulate: Color = Color(0.7, 0.7, 0.7, 1.0)
 @export var enabled_modulate: Color = Color.WHITE
@@ -46,10 +50,13 @@ var _alpha_hit_mask: BitMap
 var _scale_tween: Tween
 var _rot_tween: Tween
 var _mod_tween: Tween
+var _refill_tween: Tween
 
 func _ready() -> void:
 	#smooth_speed = 20.0
 	super._ready()
+	if action_id != &"":
+		add_to_group(&"player_action_buttons")
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var mask_texture := texture_progress if texture_progress != null else texture_under
 	_alpha_hit_mask = AlphaHitMask.build(mask_texture)
@@ -80,7 +87,10 @@ func snap_to(v: float) -> void:
 	_refresh_visual()
 
 func smooth_to(v: float) -> void:
-	super.smooth_to(v)
+	if is_zero_approx(v):
+		smooth_to_with_duration(v, reset_animation_duration_sec)
+	else:
+		super.smooth_to(v)
 	_refresh_visual()
 
 func is_ready() -> bool:
@@ -240,17 +250,40 @@ func _finish_pointer_press(released_inside: bool) -> void:
 	button_up.emit()
 	if not released_inside:
 		return
+
+	try_activate()
+
+func try_activate() -> bool:
 	var now := Time.get_ticks_msec() / 1000.0
 	if now < _cooldown_until:
-		return
+		return false
 	if require_full_to_press and not is_ready():
 		_play_fail_feedback()
 		press_failed.emit()
-		return
+		return false
 
 	_cooldown_until = now + press_cooldown_sec
 	_play_press_feedback()
+	_start_refill()
 	pressed.emit()
+	return true
+
+func _start_refill() -> void:
+	if refill_time_sec <= 0.0:
+		return
+	if _refill_tween and _refill_tween.is_valid():
+		_refill_tween.kill()
+	var reset_duration := minf(reset_animation_duration_sec, refill_time_sec)
+	_refill_tween = create_tween()
+	_refill_tween.tween_property(self, "value", 0.0, reset_duration)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_refill_tween.tween_property(self, "value", 1.0, refill_time_sec - reset_duration)\
+		.set_trans(Tween.TRANS_LINEAR)
+	_refill_tween.tween_callback(_finish_refill)
+
+func _finish_refill() -> void:
+	_refill_tween = null
+	snap_to(1.0)
 
 func _is_inside_control(viewport_position: Vector2) -> bool:
 	var local_position := get_global_transform_with_canvas().affine_inverse() * viewport_position

@@ -1,12 +1,16 @@
 extends TextureButton
+class_name ButtonFeedback
 
 const AlphaHitMask = preload("res://game/gui/alpha_hit_mask.gd")
 
 enum PressAnimationMode { ON_RELEASE, WHILE_HELD }
 
+@export var action_id: StringName = &""
+@export var input_action: StringName = &""
+
 @export_group("Juice")
 @export var hover_scale: float = 1.05
-@export var hover_lerp_sec: float = 0.12
+@export var hover_lerp_sec: float = 0.1
 @export var press_animation_mode: PressAnimationMode = PressAnimationMode.ON_RELEASE
 @export var press_scale: float = 0.86
 @export var press_hold_sec: float = 0.05
@@ -18,6 +22,8 @@ var _in_press_anim: bool = false
 var _scale_tween: Tween
 
 func _ready() -> void:
+	if action_id != &"":
+		add_to_group(&"player_action_buttons")
 	_setup_click_mask()
 	_base_scale = scale
 	resized.connect(_update_pivot)
@@ -49,6 +55,10 @@ func _setup_click_mask() -> void:
 
 func _update_pivot() -> void:
 	pivot_offset = size * 0.5
+
+func activate() -> void:
+	if not disabled:
+		pressed.emit()
 
 func _target_scale() -> Vector2:
 	return _base_scale * (hover_scale if _hovered else 1.0)
