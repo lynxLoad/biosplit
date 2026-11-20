@@ -21,8 +21,8 @@ AudioManager="*res://game/management/audio_manager.gd"
 
 [display]
 
-window/size/viewport_width=960
-window/size/viewport_height=540
+window/size/viewport_width=800
+window/size/viewport_height=450
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=4

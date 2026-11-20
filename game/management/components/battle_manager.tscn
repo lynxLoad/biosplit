@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b518ysonl8xuh"]
 
-[ext_resource type="Script" uid="uid://b121f2rxt14x6" path="res://game/arena/battle_manager.gd" id="1_nufet"]
+[ext_resource type="Script" uid="uid://b121f2rxt14x6" path="res://game/management/battle_manager.gd" id="1_nufet"]
 
 [node name="BattleManager" type="Node" unique_id=429190078]
 script = ExtResource("1_nufet")

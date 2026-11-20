@@ -1,7 +1,7 @@
 extends CharacterBase
 class_name Enemy
 
-@onready var health_bar: HealthBar = $HealthBar
+@onready var health_bar: TrailBar = $HealthBar
 
 @export var reactive_block_hold: float = 0.35
 @export var reactive_block_min_hold: float = 0.15

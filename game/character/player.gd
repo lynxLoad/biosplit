@@ -165,7 +165,7 @@ func _spawn_damage_burst() -> void:
 	burst.offset = _sprite_base_offset
 	burst.scale = _sprite_base_scale
 	burst.z_index = animated_sprite.z_index - 2
-	burst.speed_scale = 0.0
+	burst.speed_scale = 0.0 
 	burst.modulate = Color(damage_burst_color.r, damage_burst_color.g, damage_burst_color.b, damage_burst_alpha)
 	add_child(burst)
 	burst.play(animated_sprite.animation)

@@ -1,7 +1,7 @@
 extends TextureButton
 class_name ButtonFeedback
 
-const AlphaHitMask = preload("res://game/gui/alpha_hit_mask.gd")
+const AlphaHitMask = preload("uid://du3wo82hml0to")
 
 enum PressAnimationMode { ON_RELEASE, WHILE_HELD }
 

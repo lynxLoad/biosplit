@@ -1,5 +1,5 @@
 extends Control
-class_name HealthBar
+class_name TrailBar
 
 @export_group("Juice")
 @export var show_trail: bool = true
@@ -12,9 +12,9 @@ class_name HealthBar
 @export var punch_time: float = 0.2
 @export var shake_pixels: float = 4.0
 @export var shake_time: float = 0.2
-@export var low_hp_threshold: float = 0.25
-@export var low_hp_pulse_speed: float = 5.0
-@export var low_hp_pulse_amount: float = 0.18
+@export var low_value_threshold: float = 0.25
+@export var low_value_pulse_speed: float = 5.0
+@export var low_value_pulse_amount: float = 0.18
 
 @onready var _progress: SmoothBar = $Progress
 @onready var _under: TextureRect = $Under
@@ -142,10 +142,10 @@ func _shake() -> void:
 # --- Low HP pulse ---
 
 func _process(delta: float) -> void:
-	if _target > 0.0 and _target <= low_hp_threshold:
-		_pulse_time += delta * low_hp_pulse_speed
+	if _target > 0.0 and _target <= low_value_threshold:
+		_pulse_time += delta * low_value_pulse_speed
 		var p := sin(_pulse_time) * 0.5 + 0.5
-		_apply_bar_alpha(1.0 - low_hp_pulse_amount * p)
+		_apply_bar_alpha(1.0 - low_value_pulse_amount * p)
 	elif _pulse_time != 0.0:
 		_pulse_time = 0.0
 		_apply_bar_alpha(1.0)

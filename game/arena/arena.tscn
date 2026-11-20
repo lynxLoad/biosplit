@@ -4,8 +4,8 @@
 [ext_resource type="Texture2D" uid="uid://c1ikdblwvnt6j" path="res://assets/sprites/Back_03.png" id="2_8eybb"]
 [ext_resource type="Texture2D" uid="uid://bqow00exlgrh8" path="res://assets/sprites/Back_04.png" id="3_elpcd"]
 [ext_resource type="Texture2D" uid="uid://cetn7xkt6b7bw" path="res://assets/sprites/Back_02.png" id="4_ld8sx"]
-[ext_resource type="PackedScene" uid="uid://b518ysonl8xuh" path="res://game/arena/battle_manager.tscn" id="5_8eybb"]
-[ext_resource type="PackedScene" uid="uid://bjsn5f3j22js6" path="res://game/arena/battle_camera.tscn" id="5_18ewb"]
+[ext_resource type="PackedScene" uid="uid://b518ysonl8xuh" path="res://game/management/components/battle_manager.tscn" id="5_8eybb"]
+[ext_resource type="PackedScene" uid="uid://bjsn5f3j22js6" path="res://game/camera/cameras/battle_camera.tscn" id="5_18ewb"]
 [ext_resource type="PackedScene" uid="uid://cimp7lob5mx6a" path="res://game/character/characters/player.tscn" id="7_18ewb"]
 [ext_resource type="PackedScene" uid="uid://djqbckuyej0ip" path="res://game/character/characters/enemy.tscn" id="8_5qxpj"]
 [ext_resource type="Shader" uid="uid://b4ukw70x8p4x0" path="res://assets/shaders/fog.gdshader" id="8_q1uy0"]
@@ -106,7 +106,7 @@ scroll_offset = Vector2(0, -17)
 z_index = 4096
 texture_filter = 1
 texture_repeat = 2
-position = Vector2(544, 43)
+position = Vector2(553, 160)
 texture = ExtResource("4_ld8sx")
 offset = Vector2(480, 448)
 region_enabled = true

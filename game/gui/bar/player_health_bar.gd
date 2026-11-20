@@ -1,4 +1,4 @@
-extends HealthBar
+extends TrailBar
 class_name PlayerHealthBar
 
 ## Группа, в которой находится игрок (Player сам себя туда добавляет).

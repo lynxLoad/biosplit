@@ -3,7 +3,7 @@ extends SmoothBar
 ## Кнопка, которая заполняется через value (0..1).
 ## Отдаёт сигнал pressed только когда заполнена.
 
-const AlphaHitMask = preload("res://game/gui/alpha_hit_mask.gd")
+const AlphaHitMask = preload("uid://du3wo82hml0to")
 
 signal pressed
 signal button_down

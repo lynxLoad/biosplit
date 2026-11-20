@@ -932,11 +932,11 @@ func _await_anim_frame(anim: StringName, frame: int, id: int) -> void:
 
 # ── UI helpers ──
 
-func _init_bar(bar: HealthBar, value: float, max_value: float) -> void:
+func _init_bar(bar: TrailBar, value: float, max_value: float) -> void:
 	if bar:
 		bar.setup(value, max_value)
 
-func _sync_bar(bar: HealthBar, value: float, max_value: float) -> void:
+func _sync_bar(bar: TrailBar, value: float, max_value: float) -> void:
 	if bar:
 		bar.update_value(value, max_value)
 
